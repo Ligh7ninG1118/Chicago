@@ -77,4 +77,8 @@ Plugins/**/Intermediate/*
 # Cache files for the editor to use
 DerivedDataCache/*
 
-# Unreal Assets
+# Unreal: Ignore all imported assets under Content except project's own (Chicago)
+Content/**
+
+!Content/**/Chicago/
+!Content/**/Chicago/**
