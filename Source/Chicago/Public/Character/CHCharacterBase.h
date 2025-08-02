@@ -3,27 +3,44 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AbilitySystemInterface.h"
 #include "GameFramework/Character.h"
 #include "CHCharacterBase.generated.h"
 
+struct FOnAttributeChangeData;
+
 UCLASS()
-class CHICAGO_API ACHCharacterBase : public ACharacter
+class CHICAGO_API ACHCharacterBase : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
 public:
 	// Sets default values for this character's properties
-	ACHCharacterBase();
+	ACHCharacterBase(const class FObjectInitializer& ObjectInitializer);
+
+	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
+	UFUNCTION(BlueprintCallable)
+	virtual bool IsAlive() const;
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	TWeakObjectPtr<class UCHAbilitySystemComponent> AbilitySystemComponent;
+	
+	TWeakObjectPtr<class UCHAttributeSetBase> AttributeSetBase;
 
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Abilities")
+	TArray<TSubclassOf<class UGameplayAbility>> CharacterAbilities;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Abilities")
+	TSubclassOf<class UGameplayEffect> DefaultAttributes;
+	
+	virtual void InitializeAttributes();
+
+	FDelegateHandle HealthChangeDelegateHandle;
+
+	virtual void HealthChanged(const FOnAttributeChangeData& Data);
 
 };

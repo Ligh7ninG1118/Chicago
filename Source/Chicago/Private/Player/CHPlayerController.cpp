@@ -4,6 +4,8 @@
 #include "Player/CHPlayerController.h"
 
 #include "EnhancedInputSubsystems.h"
+#include "AbilitySystem/CHAbilitySystemComponent.h"
+#include "Character/CHCharacterBase.h"
 
 ACHPlayerController::ACHPlayerController()
 {
@@ -25,5 +27,13 @@ void ACHPlayerController::SetupInputComponent()
 
 void ACHPlayerController::PostProcessInput(const float DeltaTime, const bool bGamePaused)
 {
+	if (ACHCharacterBase* PYCharacter = Cast<ACHCharacterBase>(GetCharacter()))
+	{
+		if (UCHAbilitySystemComponent* ASC = Cast<UCHAbilitySystemComponent>(PYCharacter->GetAbilitySystemComponent()))
+		{
+			ASC->ProcessAbilityInput(DeltaTime, bGamePaused);
+		}
+	}
+	
 	Super::PostProcessInput(DeltaTime, bGamePaused);
 }

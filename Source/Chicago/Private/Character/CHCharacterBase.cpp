@@ -2,33 +2,74 @@
 
 
 #include "Character/CHCharacterBase.h"
+#include "AbilitySystem/CHAbilitySystemComponent.h"
+#include "AbilitySystem/CHAttributeSetBase.h"
 
-// Sets default values
-ACHCharacterBase::ACHCharacterBase()
+ACHCharacterBase::ACHCharacterBase(const class FObjectInitializer& ObjectInitializer)
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+}
 
+UAbilitySystemComponent* ACHCharacterBase::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent.Get();
+}
+
+bool ACHCharacterBase::IsAlive() const
+{
+	if (AttributeSetBase.IsValid())
+		return AttributeSetBase->GetHealth() > 0.0f;
+
+	return false;
 }
 
 // Called when the game starts or when spawned
 void ACHCharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	if (AbilitySystemComponent.IsValid())
+	{
+		InitializeAttributes();
+
+		HealthChangeDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
+			AttributeSetBase->GetHealthAttribute()).AddUObject(this, &ACHCharacterBase::HealthChanged);
+		
+	}
 }
 
-// Called every frame
-void ACHCharacterBase::Tick(float DeltaTime)
+void ACHCharacterBase::InitializeAttributes()
 {
-	Super::Tick(DeltaTime);
+	if (!AbilitySystemComponent.IsValid())
+		return;
 
+	if (!DefaultAttributes)
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s() missing DefaultAttributes for %s"), *FString(__FUNCTION__), *GetName());
+		return;
+	}
+
+	FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
+	EffectContext.AddSourceObject(this);
+
+	FGameplayEffectSpecHandle NewHandle = AbilitySystemComponent->MakeOutgoingSpec(DefaultAttributes, 1.0f, EffectContext);
+	if (NewHandle.IsValid())
+	{
+		FActiveGameplayEffectHandle ActiveGEHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*NewHandle.Data.Get(), AbilitySystemComponent.Get());
+	}
 }
 
-// Called to bind functionality to input
-void ACHCharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void ACHCharacterBase::HealthChanged(const FOnAttributeChangeData& Data)
 {
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
+	float Health = Data.NewValue;
 
+	GEngine->AddOnScreenDebugMessage(37, 2.0f, FColor::Green, FString::Printf(TEXT("Health: %.2f"), Health));
+
+	if (!IsAlive())
+	{
+		
+	}
 }
+
+
+
 

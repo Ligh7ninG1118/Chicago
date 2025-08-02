@@ -16,6 +16,7 @@ public class Chicago : ModuleRules
 			"EnhancedInput",
 			"GameplayAbilities",
 			"GameplayTags",
+			"GameplayTasks",
 			"AIModule",
 			"StateTreeModule",
 			"GameplayStateTreeModule",
