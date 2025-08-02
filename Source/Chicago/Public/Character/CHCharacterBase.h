@@ -7,6 +7,9 @@
 #include "GameFramework/Character.h"
 #include "CHCharacterBase.generated.h"
 
+class UAbilitySystemComponent;
+class UCHAbilitySystemComponent;
+class UCHAttributeSetBase;
 struct FOnAttributeChangeData;
 
 UCLASS()
@@ -16,9 +19,9 @@ class CHICAGO_API ACHCharacterBase : public ACharacter, public IAbilitySystemInt
 
 public:
 	// Sets default values for this character's properties
-	ACHCharacterBase(const class FObjectInitializer& ObjectInitializer);
+	ACHCharacterBase(const FObjectInitializer& ObjectInitializer);
 
-	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 	UFUNCTION(BlueprintCallable)
 	virtual bool IsAlive() const;
@@ -27,9 +30,15 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	TWeakObjectPtr<class UCHAbilitySystemComponent> AbilitySystemComponent;
+	TWeakObjectPtr<UCHAbilitySystemComponent> AbilitySystemComponent;
+
+	UPROPERTY()
+	UCHAbilitySystemComponent* HardRefASC; 
 	
-	TWeakObjectPtr<class UCHAttributeSetBase> AttributeSetBase;
+	TWeakObjectPtr<UCHAttributeSetBase> AttributeSetBase;
+
+	UPROPERTY()
+	UCHAttributeSetBase* HardRefAttributeSet;
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Abilities")
 	TArray<TSubclassOf<class UGameplayAbility>> CharacterAbilities;

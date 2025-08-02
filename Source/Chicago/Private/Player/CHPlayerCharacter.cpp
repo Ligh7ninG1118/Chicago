@@ -30,6 +30,7 @@ ACHPlayerCharacter::ACHPlayerCharacter(const class FObjectInitializer& ObjectIni
 	FirstPersonCameraComponent->SetRelativeLocationAndRotation(FVector(-2.8f, 5.89f, 0.0f), FRotator(0.0f, 90.0f, -90.0f));*/
 
 	//TODO: Temp solution for rotating the gun to view
+	
 	// Create the Camera Component	
 	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("First Person Camera"));
 	FirstPersonCameraComponent->SetupAttachment(GetMesh());
@@ -58,6 +59,10 @@ ACHPlayerCharacter::ACHPlayerCharacter(const class FObjectInitializer& ObjectIni
 	// Configure character movement
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
 	GetCharacterMovement()->AirControl = 0.5f;
+
+
+
+	
 }
 
 void ACHPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

@@ -6,7 +6,15 @@
 #include "AbilitySystem/CHAttributeSetBase.h"
 
 ACHCharacterBase::ACHCharacterBase(const class FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
 {
+	HardRefASC = CreateDefaultSubobject<UCHAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+	HardRefASC->SetIsReplicated(true);
+	HardRefASC->SetReplicationMode(EGameplayEffectReplicationMode::Full);
+	AbilitySystemComponent = HardRefASC;
+	
+	HardRefAttributeSet = CreateDefaultSubobject<UCHAttributeSetBase>(TEXT("AttributeSet"));
+	AttributeSetBase = HardRefAttributeSet;
 }
 
 UAbilitySystemComponent* ACHCharacterBase::GetAbilitySystemComponent() const
