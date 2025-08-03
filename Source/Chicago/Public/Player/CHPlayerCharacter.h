@@ -11,6 +11,7 @@ class USkeletalMeshComponent;
 class UCameraComponent;
 class UInputAction;
 struct FInputActionValue;
+struct FGameplayTag;
 
 /**
  * 
@@ -45,6 +46,9 @@ protected:
 	/** Mouse Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category ="Input")
 	class UInputAction* MouseLookAction;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	class UInputConfig* AbilitiesInputConfig;
 	
 public:
 	ACHPlayerCharacter(const class FObjectInitializer& ObjectInitializer);
@@ -72,6 +76,10 @@ protected:
 	/** Handles jump end inputs from either controls or UI interfaces */
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoJumpEnd();
+
+	void Input_AbilityInputTagPressed(FGameplayTag InputTag);
+	
+	void Input_AbilityInputTagReleased(FGameplayTag InputTag);
 
 protected:
 

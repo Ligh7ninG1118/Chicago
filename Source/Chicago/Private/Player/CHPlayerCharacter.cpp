@@ -7,8 +7,11 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "EnhancedInputComponent.h"
+#include "GameplayTagContainer.h"
 #include "InputActionValue.h"
+#include "AbilitySystem/CHAbilitySystemComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Input/CHEnhancedInputComponent.h"
 
 ACHPlayerCharacter::ACHPlayerCharacter(const class FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -68,7 +71,7 @@ ACHPlayerCharacter::ACHPlayerCharacter(const class FObjectInitializer& ObjectIni
 void ACHPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {	
 	// Set up action bindings
-	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
+	if (UCHEnhancedInputComponent* EnhancedInputComponent = Cast<UCHEnhancedInputComponent>(PlayerInputComponent))
 	{
 		// Jumping
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACHPlayerCharacter::DoJumpStart);
@@ -80,6 +83,9 @@ void ACHPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		// Looking/Aiming
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ACHPlayerCharacter::LookInput);
 		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &ACHPlayerCharacter::LookInput);
+
+		TArray<uint32> BindHandles;
+		EnhancedInputComponent->BindAbilityAction(AbilitiesInputConfig, this, &ThisClass::Input_AbilityInputTagPressed, &ThisClass::Input_AbilityInputTagReleased, BindHandles);
 	}
 	else
 	{
@@ -138,4 +144,26 @@ void ACHPlayerCharacter::DoJumpEnd()
 {
 	// pass StopJumping to the character
 	StopJumping();
+}
+
+void ACHPlayerCharacter::Input_AbilityInputTagPressed(FGameplayTag InputTag)
+{
+	if (AbilitySystemComponent != nullptr)
+	{
+		if (UCHAbilitySystemComponent* ASC = Cast<UCHAbilitySystemComponent>(AbilitySystemComponent))
+		{
+			ASC->AbilityInputTagPressed(InputTag);
+		}
+	}
+}
+
+void ACHPlayerCharacter::Input_AbilityInputTagReleased(FGameplayTag InputTag)
+{
+	if (AbilitySystemComponent != nullptr)
+	{
+		if (UCHAbilitySystemComponent* ASC = Cast<UCHAbilitySystemComponent>(AbilitySystemComponent))
+		{
+			ASC->AbilityInputTagReleased(InputTag);
+		}
+	}
 }

@@ -23,8 +23,13 @@ public:
 
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
+	void AddAbility(TSubclassOf<class UGameplayAbility>& Ability);
+	
 	UFUNCTION(BlueprintCallable)
 	virtual bool IsAlive() const;
+	
+	virtual void Die();
+	
 
 protected:
 	// Called when the game starts or when spawned
@@ -45,6 +50,8 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Abilities")
 	TSubclassOf<class UGameplayEffect> DefaultAttributes;
+
+	void AddCharacterAbilities();
 	
 	virtual void InitializeAttributes();
 

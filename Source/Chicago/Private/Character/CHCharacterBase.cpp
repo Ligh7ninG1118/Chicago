@@ -4,6 +4,7 @@
 #include "Character/CHCharacterBase.h"
 #include "AbilitySystem/CHAbilitySystemComponent.h"
 #include "AbilitySystem/CHAttributeSetBase.h"
+#include "AbilitySystem/CHGameplayAbility.h"
 
 ACHCharacterBase::ACHCharacterBase(const class FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -22,12 +23,25 @@ UAbilitySystemComponent* ACHCharacterBase::GetAbilitySystemComponent() const
 	return AbilitySystemComponent.Get();
 }
 
+void ACHCharacterBase::AddAbility(TSubclassOf<UGameplayAbility>& Ability)
+{
+	if (AbilitySystemComponent != nullptr)
+	{
+		AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(Ability, 1, INDEX_NONE, this));
+	}
+}
+
 bool ACHCharacterBase::IsAlive() const
 {
 	if (AttributeSetBase.IsValid())
 		return AttributeSetBase->GetHealth() > 0.0f;
 
 	return false;
+}
+
+void ACHCharacterBase::Die()
+{
+	Destroy();
 }
 
 // Called when the game starts or when spawned
@@ -37,11 +51,23 @@ void ACHCharacterBase::BeginPlay()
 
 	if (AbilitySystemComponent.IsValid())
 	{
+		AddCharacterAbilities();
 		InitializeAttributes();
 
 		HealthChangeDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
 			AttributeSetBase->GetHealthAttribute()).AddUObject(this, &ACHCharacterBase::HealthChanged);
 		
+	}
+}
+
+void ACHCharacterBase::AddCharacterAbilities()
+{
+	if (GetLocalRole() != ROLE_Authority || !AbilitySystemComponent->IsValidLowLevel())
+		return;
+
+	for (auto& StartupAbility : CharacterAbilities)
+	{
+		AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(StartupAbility, 1, INDEX_NONE, this));
 	}
 }
 
@@ -70,11 +96,12 @@ void ACHCharacterBase::HealthChanged(const FOnAttributeChangeData& Data)
 {
 	float Health = Data.NewValue;
 
-	GEngine->AddOnScreenDebugMessage(37, 2.0f, FColor::Green, FString::Printf(TEXT("Health: %.2f"), Health));
+	GEngine->AddOnScreenDebugMessage(-1, 4.0f, FColor::Green, FString::Printf(TEXT("Health: %.2f"), Health));
 
 	if (!IsAlive())
 	{
-		
+		//TODO: Ensure this only execute once
+		Die();
 	}
 }
 
