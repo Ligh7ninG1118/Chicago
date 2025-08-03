@@ -84,8 +84,11 @@ void ACHPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ACHPlayerCharacter::LookInput);
 		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &ACHPlayerCharacter::LookInput);
 
-		TArray<uint32> BindHandles;
-		EnhancedInputComponent->BindAbilityAction(AbilitiesInputConfig, this, &ThisClass::Input_AbilityInputTagPressed, &ThisClass::Input_AbilityInputTagReleased, BindHandles);
+		if (AbilitiesInputConfig != nullptr)
+		{
+			TArray<uint32> BindHandles;
+			EnhancedInputComponent->BindAbilityAction(AbilitiesInputConfig, this, &ThisClass::Input_AbilityInputTagPressed, &ThisClass::Input_AbilityInputTagReleased, BindHandles);
+		}
 	}
 	else
 	{
