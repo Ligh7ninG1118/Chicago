@@ -41,7 +41,7 @@ bool ACHCharacterBase::IsAlive() const
 
 void ACHCharacterBase::Die()
 {
-	Destroy();
+	//Destroy();
 }
 
 // Called when the game starts or when spawned
