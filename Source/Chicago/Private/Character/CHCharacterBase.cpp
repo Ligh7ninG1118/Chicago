@@ -5,6 +5,7 @@
 #include "AbilitySystem/CHAbilitySystemComponent.h"
 #include "AbilitySystem/CHAttributeSetBase.h"
 #include "AbilitySystem/CHGameplayAbility.h"
+#include "Equipments/CHInventoryManager.h"
 
 ACHCharacterBase::ACHCharacterBase(const class FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -16,6 +17,8 @@ ACHCharacterBase::ACHCharacterBase(const class FObjectInitializer& ObjectInitial
 	
 	HardRefAttributeSet = CreateDefaultSubobject<UCHAttributeSetBase>(TEXT("AttributeSet"));
 	AttributeSetBase = HardRefAttributeSet;
+
+	InventoryManager = CreateDefaultSubobject<UCHInventoryManager>(TEXT("InventoryManager"));
 }
 
 UAbilitySystemComponent* ACHCharacterBase::GetAbilitySystemComponent() const

@@ -7,6 +7,7 @@
 #include "GameFramework/Character.h"
 #include "CHCharacterBase.generated.h"
 
+class UCHInventoryManager;
 class UAbilitySystemComponent;
 class UCHAbilitySystemComponent;
 class UCHAttributeSetBase;
@@ -17,6 +18,9 @@ class CHICAGO_API ACHCharacterBase : public ACharacter, public IAbilitySystemInt
 {
 	GENERATED_BODY()
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
+	UCHInventoryManager* InventoryManager;
+	
 public:
 	// Sets default values for this character's properties
 	ACHCharacterBase(const FObjectInitializer& ObjectInitializer);
@@ -24,6 +28,8 @@ public:
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 	void AddAbility(TSubclassOf<class UGameplayAbility>& Ability);
+
+	UCHInventoryManager* GetInventoryManager() const {return InventoryManager;}
 	
 	UFUNCTION(BlueprintCallable)
 	virtual bool IsAlive() const;
