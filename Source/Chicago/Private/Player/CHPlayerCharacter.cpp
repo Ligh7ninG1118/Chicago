@@ -10,6 +10,7 @@
 #include "GameplayTagContainer.h"
 #include "InputActionValue.h"
 #include "AbilitySystem/CHAbilitySystemComponent.h"
+#include "Equipments/CHWeaponBase.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Input/CHEnhancedInputComponent.h"
 
@@ -169,4 +170,38 @@ void ACHPlayerCharacter::Input_AbilityInputTagReleased(FGameplayTag InputTag)
 			ASC->AbilityInputTagReleased(InputTag);
 		}
 	}
+}
+
+void ACHPlayerCharacter::AttachWeaponMeshes(ACHWeaponBase* Weapon)
+{
+	const FAttachmentTransformRules AttachmentRule(EAttachmentRule::SnapToTarget, false);
+	Weapon->AttachToActor(this, AttachmentRule);
+
+	Weapon->GetGunMesh()->AttachToComponent(GetFirstPersonMesh(), AttachmentRule, FirstPersonWeaponSocket);
+}
+
+void ACHPlayerCharacter::PlayFiringMontage(UAnimMontage* Montage)
+{
+	UAnimInstance* AnimInstance = FirstPersonMesh->GetAnimInstance();
+	if (AnimInstance != nullptr)
+	{
+		AnimInstance->Montage_Play(Montage);
+	}
+}
+
+//TODO: Combine this with above function?
+float ACHPlayerCharacter::PlayReloadMontage(UAnimMontage* Montage)
+{
+	UAnimInstance* AnimInstance = FirstPersonMesh->GetAnimInstance();
+	if (AnimInstance != nullptr)
+	{
+		return AnimInstance->Montage_Play(Montage);
+	}
+
+	return 0.0f;
+}
+
+UCameraComponent* ACHPlayerCharacter::GetFiringComponent() const
+{
+	return FirstPersonCameraComponent;
 }

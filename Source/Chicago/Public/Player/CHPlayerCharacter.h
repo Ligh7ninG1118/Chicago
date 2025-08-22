@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Character/CHCharacterBase.h"
+#include "Equipments/WeaponHolder.h"
 #include "CHPlayerCharacter.generated.h"
 
 class UInputComponent;
@@ -17,7 +18,7 @@ struct FGameplayTag;
  * 
  */
 UCLASS()
-class CHICAGO_API ACHPlayerCharacter : public ACHCharacterBase
+class CHICAGO_API ACHPlayerCharacter : public ACHCharacterBase, public IWeaponHolder
 {
 	GENERATED_BODY()
 	
@@ -49,6 +50,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	class UInputConfig* AbilitiesInputConfig;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category ="Weapons")
+	FName FirstPersonWeaponSocket = FName("ik_hand_gun");
 	
 public:
 	ACHPlayerCharacter(const class FObjectInitializer& ObjectInitializer);
@@ -95,4 +99,13 @@ public:
 	/** Returns first person camera component **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 
+public:
+	virtual void AttachWeaponMeshes(ACHWeaponBase* Weapon) override;
+
+	virtual void PlayFiringMontage(UAnimMontage* Montage) override;
+
+	virtual float PlayReloadMontage(UAnimMontage* Montage) override;
+
+	virtual UCameraComponent* GetFiringComponent() const override;
+	
 };

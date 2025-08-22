@@ -2,6 +2,7 @@
 
 
 #include "Equipments/CHWeaponBase.h"
+#include "Equipments/WeaponHolder.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
@@ -34,16 +35,38 @@ void ACHWeaponBase::BeginPlay()
 {
 	Super::BeginPlay();
 
+	WeaponHolder = Cast<IWeaponHolder>(GetOwner());
+	WeaponHolder->AttachWeaponMeshes(this);
+	
 	CurrentAmmoInMagazine = MaxMagazineSize;
+	
+	FireRateInterval = 60.0f / FireRatePerMin;
 }
 
 void ACHWeaponBase::StartFiring()
 {
 	bIsFiring = true;
+
+	const float TimeSinceLastShot = GetWorld()->GetTimeSeconds() - TimeOfLastShot;
+
+	if (TimeSinceLastShot > FireRateInterval)
+	{
+		Fire();
+	}
+	else
+	{
+		if (bIsFullAuto)
+		{
+			GetWorld()->GetTimerManager().SetTimer(FireRateTimer, this, &ACHWeaponBase::Fire, TimeSinceLastShot, false);
+		}
+	}
+	
 }
 
 void ACHWeaponBase::StopFiring()
 {
+	bIsFiring = false;
+	GetWorld()->GetTimerManager().ClearTimer(FireRateTimer);
 }
 
 void ACHWeaponBase::Fire()
@@ -53,20 +76,37 @@ void ACHWeaponBase::Fire()
 	
 	ShootHitScan();
 
+	TimeOfLastShot = GetWorld()->GetTimeSeconds();
+	
 	CurrentAmmoInMagazine--;
 
+	if (bIsFullAuto)
+	{
+		GetWorld()->GetTimerManager().SetTimer(FireRateTimer, this, &ACHWeaponBase::Fire, FireRateInterval, false);
+	}
+	else
+	{
+		//TODO: Semi-Auto
+		//GetWorld()->GetTimerManager().SetTimer(RefireTimer, this, &AShooterWeapon::FireCooldownExpired, RefireRate, false);
+	}
+	
 	if (FireSound != nullptr)
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
 	}
 
-	if (FireAnimation != nullptr)
+	if (GunFireAnimation != nullptr)
 	{
 		UAnimInstance* AnimInstance = GunMesh->GetAnimInstance();
 		if (AnimInstance != nullptr)
 		{
-			AnimInstance->Montage_Play(FireAnimation);
+			AnimInstance->Montage_Play(GunFireAnimation);
 		}
+	}
+
+	if (FirstPersonFireAnimation != nullptr)
+	{
+		WeaponHolder->PlayFiringMontage(FirstPersonFireAnimation);
 	}
 
 	if (AmmoCasingClass != nullptr)
@@ -84,11 +124,7 @@ void ACHWeaponBase::Fire()
 
 void ACHWeaponBase::ShootHitScan()
 {
-	UCameraComponent* PlayerCamera = WeaponOwner->GetComponentByClass<UCameraComponent>();
-	if (PlayerCamera == nullptr)
-	{
-		//TODO: Shooting for AI Character. Could have a better way to handle this
-	}
+	UCameraComponent* PlayerCamera = WeaponHolder->GetFiringComponent();
 
 	FVector MuzzlePos = PlayerCamera->GetComponentLocation();
 	FVector ShootDir = PlayerCamera->GetForwardVector();
@@ -96,16 +132,18 @@ void ACHWeaponBase::ShootHitScan()
 	FCollisionObjectQueryParams ObjectQueryParams;
 
 	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(GetOwner());
+	QueryParams.bReturnPhysicalMaterial = true;
 	
 	FHitResult HitResult;
 	//TODO: Replace with multiple when finished with bullet pen
-	bool bHasHit = GetWorld()->LineTraceSingleByProfile(HitResult, MuzzlePos, EndPos, FName("Projectile"));
+	bool bHasHit = GetWorld()->LineTraceSingleByProfile(HitResult, MuzzlePos, EndPos, FName("Projectile"), QueryParams);
 	if (bHasHit)
 	{
 		if (auto* HitActor = Cast<ACHCharacterBase>(HitResult.GetActor()))
 		{
 			UAbilitySystemComponent* ASC = HitActor->GetAbilitySystemComponent();
-			float finalDamage = WeaponDefaultDamage;
+			float finalDamage = -WeaponDefaultDamage;
 			
 			if (auto* PhysMatWithTag = Cast<UPhysicalMaterialWithTag>(HitResult.PhysMaterial))
 			{
@@ -128,7 +166,10 @@ void ACHWeaponBase::ShootHitScan()
 
 bool ACHWeaponBase::CanFire()
 {
-	if (WeaponOwner == nullptr)
+	if (!bIsFiring)
+		return false;
+	
+	if (WeaponHolder == nullptr)
 		return false;
 
 	if (CurrentAmmoInMagazine <= 0)
@@ -139,12 +180,46 @@ bool ACHWeaponBase::CanFire()
 
 void ACHWeaponBase::Reload()
 {
+	if (!CanReload())
+		return;
+
+	float ReloadTime = WeaponHolder->PlayReloadMontage(FirstPersonReloadAnimation);
+
+	FTimerHandle ReloadHandle;
+	GetWorld()->GetTimerManager().SetTimer(ReloadHandle, this, &ACHWeaponBase::FinishReload, ReloadTime, false);
+
+	if (GunReloadAnimation != nullptr)
+	{
+		UAnimInstance* AnimInstance = GunMesh->GetAnimInstance();
+		if (AnimInstance != nullptr)
+		{
+			AnimInstance->Montage_Play(GunReloadAnimation);
+		}
+	}
 	
+	//TODO: Broadcast event to update UI hud
+}
+
+void ACHWeaponBase::FinishReload()
+{
+	int32 CurrentReserveAmmo = 500;
+	
+	int32 RequestedAmmo = MaxMagazineSize - CurrentAmmoInMagazine;
+	if (CurrentAmmoInMagazine > 0 && !bIsOpenBolt)
+	{
+		RequestedAmmo += 1;
+	}
+
+	int32 AmmoDelta = FMath::Min(RequestedAmmo, CurrentReserveAmmo);
+	CurrentAmmoInMagazine += AmmoDelta;
+	CurrentReserveAmmo -= AmmoDelta;
 }
 
 bool ACHWeaponBase::CanReload()
 {
-
+	//TODO: Check reserve ammo
+	//TODO: Check current magazine 
+	
 	return true;
 }
 

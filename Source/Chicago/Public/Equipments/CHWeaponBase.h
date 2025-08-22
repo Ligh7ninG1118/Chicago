@@ -8,7 +8,7 @@
 #include "CHWeaponBase.generated.h"
 
 class UGameplayEffect;
-class ACHCharacterBase;
+class IWeaponHolder;
 class USkeletalMeshComponent;
 
 UCLASS(Abstract)
@@ -27,7 +27,7 @@ public:
 	ACHWeaponBase();
 
 protected:
-	ACHCharacterBase* WeaponOwner;
+	IWeaponHolder* WeaponHolder;
 
 	UPROPERTY(EditDefaultsOnly, Category="Weapon: Ammo")
 	int32 MaxMagazineSize = 30;
@@ -43,9 +43,13 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon: Gameplay" )
 	float FireRatePerMin;
+
+	float FireRateInterval;
 	
 	FTimerHandle FireRateTimer;
 
+	float TimeOfLastShot = 0.0f;
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon: Gameplay" )
 	bool bIsFullAuto;
 
@@ -63,19 +67,25 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon: Gameplay")
 	TSubclassOf<UGameplayEffect> DamageEffectClass;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon: Effects")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon: Sound")
 	USoundBase* FireSound;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon: Effects")
-	UAnimMontage* FireAnimation;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon: Animation")
+	UAnimMontage* GunFireAnimation;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon: Effects")
-	UAnimMontage* ReloadAnimation;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon: Animation")
+	UAnimMontage* FirstPersonFireAnimation;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon: Effects")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon: Animation")
+	UAnimMontage* GunReloadAnimation;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon: Animation")
+	UAnimMontage* FirstPersonReloadAnimation;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon: Animation")
 	UAnimMontage* EquipAnimation;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon: Effects")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon: Animation")
 	UAnimMontage* UnequipAnimation;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon: Effects")
@@ -88,19 +98,26 @@ protected:
 	virtual void BeginPlay() override;
 
 public:	
+	UFUNCTION(BlueprintCallable)
 	void StartFiring();
-
-	void StopFiring();
+	
+	UFUNCTION(BlueprintCallable)
+	void StopFiring();	
 
 protected:
-	UFUNCTION(BlueprintCallable)
 	virtual void Fire();
 
 	virtual void ShootHitScan();
 
 	virtual bool CanFire();
-
+	
+	UFUNCTION(BlueprintCallable)
 	virtual void Reload();
 
+	virtual void FinishReload();
+
 	virtual bool CanReload();
+public:
+	UFUNCTION(BlueprintPure, Category="Weapon")
+	USkeletalMeshComponent* GetGunMesh() const { return GunMesh; };
 };
