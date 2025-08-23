@@ -26,13 +26,14 @@ public:
 	virtual void AttachWeaponMeshes(ACHWeaponBase* Weapon) = 0;
 
 	virtual void PlayFiringMontage(UAnimMontage* Montage) = 0;
-
-	//TODO: Can be combined with above
-	//However, needs some sort of callback (Montage_Play returns length, or function callback)
+	
+	//TODO: Combine this with above function?
 	virtual float PlayReloadMontage(UAnimMontage* Montage) = 0;
 
 	virtual void HandleWeaponRecoil(FVector2f Recoil) = 0;
 	
 	//TODO: How do we handle this for AI characters?
 	virtual UCameraComponent* GetFiringComponent() const = 0;
+
+	virtual UAnimInstance* GetAnimInstance() const = 0;
 };

@@ -197,21 +197,26 @@ float ACHPlayerCharacter::PlayReloadMontage(UAnimMontage* Montage)
 	{
 		return AnimInstance->Montage_Play(Montage);
 	}
-
 	return 0.0f;
 }
 
 void ACHPlayerCharacter::HandleWeaponRecoil(FVector2f Recoil)
 {
-	//TODO: Need to handle this overtime so it's smoother
-
-	//OnRecoilUpdate.Broadcast(Recoil);
 	HandleRecoil(Recoil);
-	//AddControllerYawInput(Recoil.X);
-	//AddControllerPitchInput(-Recoil.Y);
 }
 
 UCameraComponent* ACHPlayerCharacter::GetFiringComponent() const
 {
 	return FirstPersonCameraComponent;
+}
+
+UAnimInstance* ACHPlayerCharacter::GetAnimInstance() const
+{
+	UAnimInstance* AnimInstance = FirstPersonMesh->GetAnimInstance();
+	if (AnimInstance != nullptr)
+	{
+		return AnimInstance;
+	}
+
+	return nullptr;
 }

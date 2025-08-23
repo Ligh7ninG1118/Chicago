@@ -11,6 +11,8 @@ class UGameplayEffect;
 class IWeaponHolder;
 class USkeletalMeshComponent;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FAmmoUpdateDelegate, int32, AmmoInMag, int32, AmmoInReserve);
+
 UCLASS(Abstract)
 class CHICAGO_API ACHWeaponBase : public AActor
 {
@@ -26,6 +28,9 @@ public:
 	// Sets default values for this actor's properties
 	ACHWeaponBase();
 
+	UPROPERTY(BlueprintAssignable)
+	FAmmoUpdateDelegate OnAmmoUpdate;
+	
 protected:
 	IWeaponHolder* WeaponHolder;
 
@@ -38,6 +43,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon: Ammo")
 	FGameplayTag AmmoType;	
 
+	//FTimerHandle ReloadTimerHandle;
+
+	bool bIsReloading = false;
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon: Gameplay")
 	bool bIsOpenBolt;
 
@@ -46,7 +55,7 @@ protected:
 
 	float FireRateInterval;
 	
-	FTimerHandle FireRateTimer;
+	FTimerHandle FireRateTimerHandle;
 
 	float TimeOfLastShot = 0.0f;
 	
@@ -114,8 +123,11 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	virtual void Reload();
 
-	virtual void FinishReload();
+	UFUNCTION()
+	virtual void FinishReloadByNotify(FName NotifyName, const FBranchingPointNotifyPayload& BranchingPointNotifyPayload);
 
+	virtual void FinishReload();
+	
 	virtual bool CanReload();
 public:
 	UFUNCTION(BlueprintPure, Category="Weapon")

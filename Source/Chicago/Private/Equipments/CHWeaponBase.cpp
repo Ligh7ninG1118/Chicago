@@ -37,10 +37,12 @@ void ACHWeaponBase::BeginPlay()
 
 	WeaponHolder = Cast<IWeaponHolder>(GetOwner());
 	WeaponHolder->AttachWeaponMeshes(this);
+	WeaponHolder->GetAnimInstance()->OnPlayMontageNotifyBegin.AddDynamic(this, &ACHWeaponBase::FinishReloadByNotify);
 	
 	CurrentAmmoInMagazine = MaxMagazineSize;
 	
 	FireRateInterval = 60.0f / FireRatePerMin;
+	
 }
 
 void ACHWeaponBase::StartFiring()
@@ -57,7 +59,7 @@ void ACHWeaponBase::StartFiring()
 	{
 		if (bIsFullAuto)
 		{
-			GetWorld()->GetTimerManager().SetTimer(FireRateTimer, this, &ACHWeaponBase::Fire, TimeSinceLastShot, false);
+			GetWorld()->GetTimerManager().SetTimer(FireRateTimerHandle, this, &ACHWeaponBase::Fire, TimeSinceLastShot, false);
 		}
 	}
 	
@@ -66,7 +68,7 @@ void ACHWeaponBase::StartFiring()
 void ACHWeaponBase::StopFiring()
 {
 	bIsFiring = false;
-	GetWorld()->GetTimerManager().ClearTimer(FireRateTimer);
+	GetWorld()->GetTimerManager().ClearTimer(FireRateTimerHandle);
 }
 
 void ACHWeaponBase::Fire()
@@ -79,10 +81,11 @@ void ACHWeaponBase::Fire()
 	TimeOfLastShot = GetWorld()->GetTimeSeconds();
 	
 	CurrentAmmoInMagazine--;
+	OnAmmoUpdate.Broadcast(CurrentAmmoInMagazine, 500);
 
 	if (bIsFullAuto)
 	{
-		GetWorld()->GetTimerManager().SetTimer(FireRateTimer, this, &ACHWeaponBase::Fire, FireRateInterval, false);
+		GetWorld()->GetTimerManager().SetTimer(FireRateTimerHandle, this, &ACHWeaponBase::Fire, FireRateInterval, false);
 	}
 	else
 	{
@@ -187,11 +190,14 @@ void ACHWeaponBase::Reload()
 	if (!CanReload())
 		return;
 
+	bIsReloading = true;
+	
+	// Failsafe in case FinishReloadByNotify is not called for any reason
+	// The reload still finishes after the whole anim montage finishes
 	float ReloadTime = WeaponHolder->PlayReloadMontage(FirstPersonReloadAnimation);
-
-	FTimerHandle ReloadHandle;
-	GetWorld()->GetTimerManager().SetTimer(ReloadHandle, this, &ACHWeaponBase::FinishReload, ReloadTime, false);
-
+	FTimerHandle Handle;
+	GetWorld()->GetTimerManager().SetTimer(Handle, this, &ACHWeaponBase::FinishReload, ReloadTime, false);
+	
 	if (GunReloadAnimation != nullptr)
 	{
 		UAnimInstance* AnimInstance = GunMesh->GetAnimInstance();
@@ -200,12 +206,20 @@ void ACHWeaponBase::Reload()
 			AnimInstance->Montage_Play(GunReloadAnimation);
 		}
 	}
-	
-	//TODO: Broadcast event to update UI hud
+}
+
+void ACHWeaponBase::FinishReloadByNotify(FName NotifyName, const FBranchingPointNotifyPayload& BranchingPointNotifyPayload)
+{
+	if (NotifyName.Compare("MagInserted") == 0)
+		FinishReload();
 }
 
 void ACHWeaponBase::FinishReload()
 {
+	// Return if already reloaded by FinishReloadByNotify
+	if (!bIsReloading)
+		return;
+
 	int32 CurrentReserveAmmo = 500;
 	
 	int32 RequestedAmmo = MaxMagazineSize - CurrentAmmoInMagazine;
@@ -217,12 +231,20 @@ void ACHWeaponBase::FinishReload()
 	int32 AmmoDelta = FMath::Min(RequestedAmmo, CurrentReserveAmmo);
 	CurrentAmmoInMagazine += AmmoDelta;
 	CurrentReserveAmmo -= AmmoDelta;
+	OnAmmoUpdate.Broadcast(CurrentAmmoInMagazine, 500);
+
+	bIsReloading = false;
 }
 
 bool ACHWeaponBase::CanReload()
 {
 	//TODO: Check reserve ammo
-	//TODO: Check current magazine 
+
+	if (CurrentAmmoInMagazine >= MaxMagazineSize)
+		return false;
+
+	if (bIsReloading)
+		return false;
 	
 	return true;
 }

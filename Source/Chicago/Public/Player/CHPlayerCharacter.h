@@ -117,5 +117,6 @@ public:
 	virtual void HandleWeaponRecoil(FVector2f Recoil) override;
 
 	virtual UCameraComponent* GetFiringComponent() const override;
-	
+
+	virtual UAnimInstance* GetAnimInstance() const override;
 };
