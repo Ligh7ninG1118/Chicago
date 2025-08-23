@@ -37,7 +37,7 @@ void ACHWeaponBase::BeginPlay()
 
 	WeaponHolder = Cast<IWeaponHolder>(GetOwner());
 	WeaponHolder->AttachWeaponMeshes(this);
-	WeaponHolder->GetAnimInstance()->OnPlayMontageNotifyBegin.AddDynamic(this, &ACHWeaponBase::FinishReloadByNotify);
+	WeaponHolder->GetAnimInstance()->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &ACHWeaponBase::FinishReloadByNotify);
 	
 	CurrentAmmoInMagazine = MaxMagazineSize;
 	
@@ -149,6 +149,9 @@ void ACHWeaponBase::ShootHitScan()
 	{
 		if (auto* HitActor = Cast<ACHCharacterBase>(HitResult.GetActor()))
 		{
+			//IHittable?
+			//damage, instigator, shouldShowHitMarker
+			
 			UAbilitySystemComponent* ASC = HitActor->GetAbilitySystemComponent();
 			float finalDamage = -WeaponDefaultDamage;
 			
