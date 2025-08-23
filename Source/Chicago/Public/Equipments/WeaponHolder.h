@@ -31,6 +31,8 @@ public:
 	virtual float PlayReloadMontage(UAnimMontage* Montage) = 0;
 
 	virtual void HandleWeaponRecoil(FVector2f Recoil) = 0;
+
+	virtual float GetMovementAccuracyPenalty() const = 0;
 	
 	//TODO: How do we handle this for AI characters?
 	virtual UCameraComponent* GetFiringComponent() const = 0;

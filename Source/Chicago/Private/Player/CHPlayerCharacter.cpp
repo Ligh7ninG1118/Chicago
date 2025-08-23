@@ -205,6 +205,11 @@ void ACHPlayerCharacter::HandleWeaponRecoil(FVector2f Recoil)
 	HandleRecoil(Recoil);
 }
 
+float ACHPlayerCharacter::GetMovementAccuracyPenalty() const
+{
+	return GetVelocity().Length();
+}
+
 UCameraComponent* ACHPlayerCharacter::GetFiringComponent() const
 {
 	return FirstPersonCameraComponent;
