@@ -90,7 +90,7 @@ void ACHWeaponBase::Fire()
 		//GetWorld()->GetTimerManager().SetTimer(RefireTimer, this, &AShooterWeapon::FireCooldownExpired, RefireRate, false);
 	}
 
-	FVector2f RecoilVector(FMath::RandRange(-0.2f, 0.2f), FMath::RandRange(0.3f, 0.5f));
+	FVector2f RecoilVector(FMath::RandRange(-0.2f, 0.2f), -FMath::RandRange(0.3f, 0.5f));
 	
 	WeaponHolder->HandleWeaponRecoil(RecoilVector);
 	

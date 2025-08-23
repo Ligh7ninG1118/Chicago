@@ -14,6 +14,8 @@ class UInputAction;
 struct FInputActionValue;
 struct FGameplayTag;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FRecoilUpdateDelegate, FVector2f, Recoil);
+
 /**
  * 
  */
@@ -56,6 +58,12 @@ protected:
 	
 public:
 	ACHPlayerCharacter(const class FObjectInitializer& ObjectInitializer);
+
+	UPROPERTY(BlueprintAssignable)
+	FRecoilUpdateDelegate OnRecoilUpdate;
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void HandleRecoil(FVector2f Recoil);
 	
 protected:
 

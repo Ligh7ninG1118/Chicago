@@ -204,9 +204,11 @@ float ACHPlayerCharacter::PlayReloadMontage(UAnimMontage* Montage)
 void ACHPlayerCharacter::HandleWeaponRecoil(FVector2f Recoil)
 {
 	//TODO: Need to handle this overtime so it's smoother
-	
-	AddControllerYawInput(Recoil.X);
-	AddControllerPitchInput(-Recoil.Y);
+
+	//OnRecoilUpdate.Broadcast(Recoil);
+	HandleRecoil(Recoil);
+	//AddControllerYawInput(Recoil.X);
+	//AddControllerPitchInput(-Recoil.Y);
 }
 
 UCameraComponent* ACHPlayerCharacter::GetFiringComponent() const
