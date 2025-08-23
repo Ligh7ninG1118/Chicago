@@ -106,6 +106,8 @@ public:
 
 	virtual float PlayReloadMontage(UAnimMontage* Montage) override;
 
+	virtual void HandleWeaponRecoil(FVector2f Recoil) override;
+
 	virtual UCameraComponent* GetFiringComponent() const override;
 	
 };

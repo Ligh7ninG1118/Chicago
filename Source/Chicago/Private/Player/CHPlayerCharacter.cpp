@@ -201,6 +201,14 @@ float ACHPlayerCharacter::PlayReloadMontage(UAnimMontage* Montage)
 	return 0.0f;
 }
 
+void ACHPlayerCharacter::HandleWeaponRecoil(FVector2f Recoil)
+{
+	//TODO: Need to handle this overtime so it's smoother
+	
+	AddControllerYawInput(Recoil.X);
+	AddControllerPitchInput(-Recoil.Y);
+}
+
 UCameraComponent* ACHPlayerCharacter::GetFiringComponent() const
 {
 	return FirstPersonCameraComponent;
