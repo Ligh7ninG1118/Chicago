@@ -13,6 +13,8 @@ class USkeletalMeshComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FAmmoUpdateDelegate, int32, AmmoInMag, int32, AmmoInReserve);
 
+//DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FTargetHitDelegate, )
+
 UCLASS(Abstract)
 class CHICAGO_API ACHWeaponBase : public AActor
 {
@@ -34,6 +36,9 @@ public:
 protected:
 	IWeaponHolder* WeaponHolder;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Gameplay: Message")
+	FGameplayTag HitMessageChannelTag;
+	
 	UPROPERTY(EditDefaultsOnly, Category="Weapon: Ammo")
 	int32 MaxMagazineSize = 30;
 

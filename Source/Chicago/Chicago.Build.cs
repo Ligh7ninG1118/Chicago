@@ -20,7 +20,8 @@ public class Chicago : ModuleRules
 			"AIModule",
 			"StateTreeModule",
 			"GameplayStateTreeModule",
-			"UMG"
+			"UMG",
+			"GameplayMessageRuntime"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
@@ -29,7 +30,8 @@ public class Chicago : ModuleRules
 			"Chicago",
 			"Chicago/Variant_Horror",
 			"Chicago/Variant_Shooter",
-			"Chicago/Variant_Shooter/AI"
+			"Chicago/Variant_Shooter/AI",
+			"GameplayMessageRuntime/Public/"
 		});
 
 		// Uncomment if you are using Slate UI

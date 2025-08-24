@@ -3,7 +3,6 @@
 
 #include "Equipments/CHWeaponBase.h"
 #include "Equipments/WeaponHolder.h"
-
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "Abilities/GameplayAbility.h"
@@ -11,7 +10,9 @@
 #include "Character/CHCharacterBase.h"
 #include "Components/SceneComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "GameFramework/GameplayMessageSubsystem.h"
 #include "Kismet/GameplayStatics.h"
+#include "Messages/FCHActionMessage.h"
 #include "Physics/PhysicalMaterialWithTag.h"
 
 
@@ -151,6 +152,12 @@ void ACHWeaponBase::ShootHitScan()
 		{
 			//IHittable?
 			//damage, instigator, shouldShowHitMarker
+
+			FCHActionMessage ActionMsg;
+			ActionMsg.Instigator = GetOwner();
+			ActionMsg.Target = HitActor;
+
+			UGameplayMessageSubsystem::Get(this).BroadcastMessage(HitMessageChannelTag, ActionMsg);
 			
 			UAbilitySystemComponent* ASC = HitActor->GetAbilitySystemComponent();
 			float finalDamage = -WeaponDefaultDamage;
