@@ -14,6 +14,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Messages/FCHActionMessage.h"
 #include "Physics/PhysicalMaterialWithTag.h"
+#include "Player/CHPlayerCharacter.h"
 
 
 // Sets default values
@@ -39,11 +40,16 @@ void ACHWeaponBase::BeginPlay()
 	WeaponHolder = Cast<IWeaponHolder>(GetOwner());
 	WeaponHolder->AttachWeaponMeshes(this);
 	WeaponHolder->GetAnimInstance()->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &ACHWeaponBase::FinishReloadByNotify);
+
+	if (auto* PlayerChar = Cast<ACHPlayerCharacter>(GetOwner()))
+	{
+		OwnerASCRef = PlayerChar->GetAbilitySystemComponent();
+	}
+
 	
 	CurrentAmmoInMagazine = MaxMagazineSize;
 	
 	FireRateInterval = 60.0f / FireRatePerMin;
-	
 }
 
 void ACHWeaponBase::StartFiring()
@@ -94,7 +100,10 @@ void ACHWeaponBase::Fire()
 		//GetWorld()->GetTimerManager().SetTimer(RefireTimer, this, &AShooterWeapon::FireCooldownExpired, RefireRate, false);
 	}
 
-	FVector2f RecoilVector(FMath::RandRange(-0.2f, 0.2f), -FMath::RandRange(0.3f, 0.5f));
+
+	FVector2f RecoilVector(
+		FMath::RandRange(-HorizontalRecoilLeftRange, HorizontalRecoilRightRange),
+		-FMath::RandRange(VerticalRecoilRangeMin, VerticalRecoilRangeMax));
 	
 	WeaponHolder->HandleWeaponRecoil(RecoilVector);
 	
@@ -133,21 +142,31 @@ void ACHWeaponBase::Fire()
 void ACHWeaponBase::ShootHitScan()
 {
 	UCameraComponent* PlayerCamera = WeaponHolder->GetFiringComponent();
-
+	
 	FVector MuzzlePos = PlayerCamera->GetComponentLocation();
 	FVector ShootDir = PlayerCamera->GetForwardVector();
-	FVector EndPos = MuzzlePos + ShootDir * WeaponMaxRange;
+	
+	if (!OwnerASCRef->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(FName("GAS.Character.Action.Aiming"))))
+	{
+		ShootDir = FMath::VRandCone(ShootDir, FMath::DegreesToRadians(HipFireSpread));
+	}
+	
+	FVector EndPos = MuzzlePos + ShootDir * HitScanMaxRange;
 	FCollisionObjectQueryParams ObjectQueryParams;
 
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(GetOwner());
 	QueryParams.bReturnPhysicalMaterial = true;
 	
+	DrawDebugLine(GetWorld(), MuzzlePos, EndPos, FColor::Green, false, 5.0f);
+	
 	FHitResult HitResult;
 	//TODO: Replace with multiple when finished with bullet pen
 	bool bHasHit = GetWorld()->LineTraceSingleByProfile(HitResult, MuzzlePos, EndPos, FName("Projectile"), QueryParams);
 	if (bHasHit)
 	{
+		DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 10.0f, 8, FColor::Green, false, 5.0f);
+		
 		if (auto* HitActor = Cast<ACHCharacterBase>(HitResult.GetActor()))
 		{
 			//IHittable?
@@ -160,7 +179,7 @@ void ACHWeaponBase::ShootHitScan()
 			UGameplayMessageSubsystem::Get(this).BroadcastMessage(HitMessageChannelTag, ActionMsg);
 			
 			UAbilitySystemComponent* ASC = HitActor->GetAbilitySystemComponent();
-			float finalDamage = -WeaponDefaultDamage;
+			float finalDamage = -DefaultDamage;
 			
 			if (auto* PhysMatWithTag = Cast<UPhysicalMaterialWithTag>(HitResult.PhysMaterial))
 			{

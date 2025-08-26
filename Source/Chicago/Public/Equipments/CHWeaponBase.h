@@ -10,6 +10,7 @@
 class UGameplayEffect;
 class IWeaponHolder;
 class USkeletalMeshComponent;
+class UAbilitySystemComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FAmmoUpdateDelegate, int32, AmmoInMag, int32, AmmoInReserve);
 
@@ -35,6 +36,8 @@ public:
 	
 protected:
 	IWeaponHolder* WeaponHolder;
+
+	UAbilitySystemComponent* OwnerASCRef;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Gameplay: Message")
 	FGameplayTag HitMessageChannelTag;
@@ -68,12 +71,12 @@ protected:
 	bool bIsFullAuto;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon: Gameplay" )
-	float WeaponMaxRange;
+	float HitScanMaxRange;
 	
 	bool bIsFiring = false;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon: Gameplay" )
-	float WeaponDefaultDamage;
+	float DefaultDamage;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon: Gameplay" )
 	TMap<FGameplayTag, float> BodyPartDamageModifierMap;
@@ -81,6 +84,33 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon: Gameplay")
 	TSubclassOf<UGameplayEffect> DamageEffectClass;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon: Recoil")
+	float HipFireSpread;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon: Recoil")
+	float VerticalRecoilRangeMin;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon: Recoil")
+	float VerticalRecoilRangeMax;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon: Recoil")
+	float HorizontalRecoilLeftRange;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon: Recoil")
+	float HorizontalRecoilRightRange;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon: Recoil")
+	float HeatGainedPerShot = 0.01f;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon: Recoil")
+	float HeatRecoverDelay = 0.1f;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon: Recoil")
+	float HeatRecoveredRate = 10.0f;
+
+	//TODO: Expose this for the crosshair widget?
+	float CurrentHeat;
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon: Sound")
 	USoundBase* FireSound;
 
