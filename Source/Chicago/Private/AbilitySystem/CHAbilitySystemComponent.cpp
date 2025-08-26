@@ -109,3 +109,12 @@ void UCHAbilitySystemComponent::ProcessAbilityInput(float DeltaTime, bool bGameP
 	InputPressedSpecHandles.Reset();
 	InputReleasedSpecHandles.Reset();
 }
+
+void UCHAbilitySystemComponent::OnTagUpdated(const FGameplayTag& Tag, bool TagExists)
+{
+	OnTagUpdate.Broadcast(Tag, TagExists);
+	if (TagExists)
+		GEngine->AddOnScreenDebugMessage(82, 2.0f, FColor::Yellow, FString::Printf(TEXT("%s added"), *Tag.ToString()));
+	else
+		GEngine->AddOnScreenDebugMessage(82, 2.0f, FColor::Yellow, FString::Printf(TEXT("%s removed"), *Tag.ToString()));
+}

@@ -6,6 +6,9 @@
 #include "AbilitySystemComponent.h"
 #include "CHAbilitySystemComponent.generated.h"
 
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnTagUpdateDelegate, const FGameplayTag&, Tag, bool, TagExists);
+
 /**
  * 
  */
@@ -14,13 +17,22 @@ class CHICAGO_API UCHAbilitySystemComponent : public UAbilitySystemComponent
 {
 	GENERATED_BODY()
 public:
+	/*UPROPERTY()
+	FGameplayTagContainer GeneralGameplayTagContainer;*/
+
 	void AbilityInputTagPressed(const FGameplayTag& InputTag);
 	
 	void AbilityInputTagReleased(const FGameplayTag& InputTag);
 
 	void ProcessAbilityInput(float DeltaTime, bool bGamePaused);
 	
+	UPROPERTY(BlueprintAssignable)
+	FOnTagUpdateDelegate OnTagUpdate;
+	
 protected:
+
+	virtual void OnTagUpdated(const FGameplayTag& Tag, bool TagExists) override;
+	
 	// Handles to abilities that had their input pressed this frame.
 	TArray<FGameplayAbilitySpecHandle> InputPressedSpecHandles;
 
