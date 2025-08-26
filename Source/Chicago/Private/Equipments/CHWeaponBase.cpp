@@ -96,8 +96,7 @@ void ACHWeaponBase::Fire()
 	}
 	else
 	{
-		//TODO: Semi-Auto
-		//GetWorld()->GetTimerManager().SetTimer(RefireTimer, this, &AShooterWeapon::FireCooldownExpired, RefireRate, false);
+		//TODO: Semi-Auto event? Not needed 
 	}
 
 
