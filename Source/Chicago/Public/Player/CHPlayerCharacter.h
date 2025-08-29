@@ -23,13 +23,35 @@ UCLASS()
 class CHICAGO_API ACHPlayerCharacter : public ACHCharacterBase, public IWeaponHolder
 {
 	GENERATED_BODY()
+#pragma region Components
 	
+public:
+	/** Returns the first person mesh **/
+	USkeletalMeshComponent* GetFirstPersonMesh() const { return FirstPersonMesh; }
+protected:
 	/** Pawn mesh: first person view (arms; seen only by self) */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* FirstPersonMesh;
+	
+#pragma endregion Components
 
+#pragma region Character Overrides
+	
+public:
+	ACHPlayerCharacter(const class FObjectInitializer& ObjectInitializer);
+
+	virtual void BeginPlay() override;
+
+	virtual void Tick(float DeltaSeconds) override;
+	
 protected:
+	/** Set up input action bindings */
+	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
+	
+#pragma endregion Character Overrides
 
+#pragma region Input
+protected:
 	/** Jump Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category ="Input")
 	UInputAction* JumpAction;
@@ -55,48 +77,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category ="Input")
 	class UInputAction* ReloadAction;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
 	class UInputConfig* AbilitiesInputConfig;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category ="Weapons")
-	FName FirstPersonWeaponSocket = FName("ik_hand_gun");
-	
-public:
-	ACHPlayerCharacter(const class FObjectInitializer& ObjectInitializer);
-
-	virtual void BeginPlay() override;
-
-	virtual void Tick(float DeltaSeconds) override;
-	
-	UPROPERTY(BlueprintAssignable)
-	FRecoilUpdateDelegate OnRecoilUpdate;
-
-	UFUNCTION(BlueprintImplementableEvent)
-	void HandleRecoil(FVector2f Recoil);
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Gameplay")
-	float RecoilSmoothClimbSpeed = 7.0f;
-	
-	FVector2f RecoilTarget = FVector2f::Zero();
-
-	virtual void ProcessRecoil(float DeltaTime);
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category ="Input")
-	TSubclassOf<ACHWeaponBase> InitialWeaponClass;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
-	ACHWeaponBase* CurrentWeapon;
-
-	UPROPERTY(BlueprintReadOnly)
-	bool bIsAiming = false;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Gameplay")
-	TSubclassOf<UCameraModifier> ADSCameraModifierClass;
-
-	UCameraModifier* ADSCameraModifier;
-	
-protected:
-
+private:
 	/** Called from Input Actions for movement input */
 	void MoveInput(const FInputActionValue& Value);
 
@@ -133,22 +117,49 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoReload();	
-	
+
+	//Handle Gameplay Ability Input Bindings
 	void Input_AbilityInputTagPressed(FGameplayTag InputTag);
 	
 	void Input_AbilityInputTagReleased(FGameplayTag InputTag);
-
-protected:
-
-	/** Set up input action bindings */
-	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 	
+#pragma endregion Input
 
-public:
+#pragma region Weapon
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category ="Weapon")
+	TSubclassOf<ACHWeaponBase> InitialWeaponClass;
 
-	/** Returns the first person mesh **/
-	USkeletalMeshComponent* GetFirstPersonMesh() const { return FirstPersonMesh; }
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category ="Weapon")
+	FName FirstPersonWeaponSocket = FName("ik_hand_gun");
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	float RecoilSmoothClimbSpeed = 7.0f;
 
+	virtual void ProcessRecoil(float DeltaTime);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
+	ACHWeaponBase* CurrentWeapon;
+
+	UPROPERTY(BlueprintReadOnly)
+	bool bIsAiming = false;
+	
+	FVector2f RecoilTarget = FVector2f::Zero();
+
+#pragma endregion Weapon
+
+#pragma region Camera
+
+#pragma endregion Camera
+	
+protected:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera")
+	TSubclassOf<UCameraModifier> ADSCameraModifierClass;
+    
+	UCameraModifier* ADSCameraModifier;
+
+#pragma region IWeaponHolder Interface
+	
 public:
 	virtual void AttachWeaponMeshes(ACHWeaponBase* Weapon) override;
 
@@ -163,4 +174,7 @@ public:
 	virtual UCameraComponent* GetFiringComponent() const override;
 
 	virtual UAnimInstance* GetAnimInstance() const override;
+	
+#pragma endregion IWeaponHolder Interface
+
 };

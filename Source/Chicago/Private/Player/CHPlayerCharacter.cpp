@@ -276,8 +276,6 @@ float ACHPlayerCharacter::PlayReloadMontage(UAnimMontage* Montage)
 void ACHPlayerCharacter::HandleWeaponRecoil(FVector2f Recoil)
 {
 	RecoilTarget += Recoil;
-	
-	HandleRecoil(Recoil);
 }
 
 float ACHPlayerCharacter::GetMovementAccuracyPenalty() const
