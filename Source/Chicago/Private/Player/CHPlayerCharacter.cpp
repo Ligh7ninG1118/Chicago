@@ -18,10 +18,9 @@ ACHPlayerCharacter::ACHPlayerCharacter(const class FObjectInitializer& ObjectIni
 	: Super(ObjectInitializer)
 {
 	// Set size for collision capsule
-	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
+	GetCapsuleComponent()->InitCapsuleSize(34.0f, 96.0f);
 	
 	// Create the first person mesh that will be viewed only by this character's owner
-	FirstPersonMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("First Person Mesh"));
 
 	/*FirstPersonMesh->SetupAttachment(GetMesh());
 	FirstPersonMesh->SetOnlyOwnerSee(true);
@@ -38,7 +37,7 @@ ACHPlayerCharacter::ACHPlayerCharacter(const class FObjectInitializer& ObjectIni
 	// Create the Camera Component	
 	
 	//FirstPersonCameraComponent->SetRelativeLocationAndRotation(FVector(-2.8f, 5.89f, 0.0f), FRotator(0.0f, 90.0f, -90.0f));
-	
+	FirstPersonMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("First Person Mesh"));
 	FirstPersonMesh->SetupAttachment(FirstPersonCameraComponent);
 	FirstPersonMesh->SetOnlyOwnerSee(true);
 	FirstPersonMesh->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::FirstPerson;
@@ -57,15 +56,16 @@ ACHPlayerCharacter::ACHPlayerCharacter(const class FObjectInitializer& ObjectIni
 	GetMesh()->SetOwnerNoSee(true);
 	GetMesh()->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::WorldSpaceRepresentation;
 
-	GetCapsuleComponent()->SetCapsuleSize(34.0f, 96.0f);
-
 	// Configure character movement
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
 	GetCharacterMovement()->AirControl = 0.5f;
+}
 
+void ACHPlayerCharacter::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
 
-
-	
+	ProcessRecoil(DeltaSeconds);
 }
 
 void ACHPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -96,6 +96,22 @@ void ACHPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	}
 }
 
+
+void ACHPlayerCharacter::ProcessRecoil(float DeltaTime)
+{
+	GEngine->AddOnScreenDebugMessage(556, 1.0f, FColor::Emerald, FString::Printf(TEXT("Recoil Target: %.2f, %.2f"), RecoilTarget.X, RecoilTarget.Y));
+	
+	if (RecoilTarget.Length() <= KINDA_SMALL_NUMBER)
+		return;
+	
+	FVector SmoothTarget = FMath::VInterpConstantTo(FVector::Zero(), FVector(RecoilTarget.X, RecoilTarget.Y, 0.0f), DeltaTime, RecoilSmoothClimbSpeed);
+
+	AddControllerYawInput(SmoothTarget.X);
+	AddControllerPitchInput(SmoothTarget.Y);
+
+	RecoilTarget.X = FMath::Max(RecoilTarget.X - SmoothTarget.X, 0.0f);
+	RecoilTarget.Y = FMath::Max(RecoilTarget.Y - SmoothTarget.Y, 0.0f);
+}
 
 void ACHPlayerCharacter::MoveInput(const FInputActionValue& Value)
 {
@@ -201,6 +217,8 @@ float ACHPlayerCharacter::PlayReloadMontage(UAnimMontage* Montage)
 
 void ACHPlayerCharacter::HandleWeaponRecoil(FVector2f Recoil)
 {
+	RecoilTarget += Recoil;
+	
 	HandleRecoil(Recoil);
 }
 

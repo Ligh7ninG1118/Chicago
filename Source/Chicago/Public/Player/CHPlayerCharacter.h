@@ -55,11 +55,20 @@ protected:
 public:
 	ACHPlayerCharacter(const class FObjectInitializer& ObjectInitializer);
 
+	virtual void Tick(float DeltaSeconds) override;
+	
 	UPROPERTY(BlueprintAssignable)
 	FRecoilUpdateDelegate OnRecoilUpdate;
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void HandleRecoil(FVector2f Recoil);
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Gameplay")
+	float RecoilSmoothClimbSpeed = 7.0f;
+	
+	FVector2f RecoilTarget = FVector2f::Zero();
+
+	virtual void ProcessRecoil(float DeltaTime);
 	
 protected:
 
