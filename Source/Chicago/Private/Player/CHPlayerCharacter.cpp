@@ -36,8 +36,7 @@ ACHPlayerCharacter::ACHPlayerCharacter(const class FObjectInitializer& ObjectIni
 	//TODO: Temp solution for rotating the gun to view
 	
 	// Create the Camera Component	
-	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("First Person Camera"));
-	FirstPersonCameraComponent->SetupAttachment(GetMesh());
+	
 	//FirstPersonCameraComponent->SetRelativeLocationAndRotation(FVector(-2.8f, 5.89f, 0.0f), FRotator(0.0f, 90.0f, -90.0f));
 	
 	FirstPersonMesh->SetupAttachment(FirstPersonCameraComponent);

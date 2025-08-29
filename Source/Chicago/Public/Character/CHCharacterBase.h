@@ -7,6 +7,7 @@
 #include "GameFramework/Character.h"
 #include "CHCharacterBase.generated.h"
 
+class UCameraComponent;
 class UCHInventoryManager;
 class UAbilitySystemComponent;
 class UCHAbilitySystemComponent;
@@ -17,9 +18,12 @@ UCLASS()
 class CHICAGO_API ACHCharacterBase : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
-
+protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
 	UCHInventoryManager* InventoryManager;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
+	UCameraComponent* FirstPersonCameraComponent;
 	
 public:
 	// Sets default values for this character's properties
@@ -30,6 +34,9 @@ public:
 	void AddAbility(TSubclassOf<class UGameplayAbility>& Ability);
 
 	UCHInventoryManager* GetInventoryManager() const {return InventoryManager;}
+	
+	/** Returns first person camera component **/
+	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 	
 	UFUNCTION(BlueprintCallable)
 	virtual bool IsAlive() const;

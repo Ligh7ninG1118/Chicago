@@ -5,6 +5,7 @@
 #include "AbilitySystem/CHAbilitySystemComponent.h"
 #include "AbilitySystem/CHAttributeSetBase.h"
 #include "AbilitySystem/CHGameplayAbility.h"
+#include "Camera/CameraComponent.h"
 #include "Equipments/CHInventoryManager.h"
 
 ACHCharacterBase::ACHCharacterBase(const class FObjectInitializer& ObjectInitializer)
@@ -19,6 +20,9 @@ ACHCharacterBase::ACHCharacterBase(const class FObjectInitializer& ObjectInitial
 	AttributeSetBase = HardRefAttributeSet;
 
 	InventoryManager = CreateDefaultSubobject<UCHInventoryManager>(TEXT("InventoryManager"));
+
+	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("First Person Camera"));
+	FirstPersonCameraComponent->SetupAttachment(GetMesh());
 }
 
 UAbilitySystemComponent* ACHCharacterBase::GetAbilitySystemComponent() const
