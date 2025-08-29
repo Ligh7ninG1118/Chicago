@@ -46,6 +46,15 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category ="Input")
 	class UInputAction* MouseLookAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category ="Input")
+	class UInputAction* ADSAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category ="Input")
+	class UInputAction* PrimaryFireAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category ="Input")
+	class UInputAction* ReloadAction;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	class UInputConfig* AbilitiesInputConfig;
 
@@ -54,6 +63,8 @@ protected:
 	
 public:
 	ACHPlayerCharacter(const class FObjectInitializer& ObjectInitializer);
+
+	virtual void BeginPlay() override;
 
 	virtual void Tick(float DeltaSeconds) override;
 	
@@ -69,6 +80,20 @@ public:
 	FVector2f RecoilTarget = FVector2f::Zero();
 
 	virtual void ProcessRecoil(float DeltaTime);
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category ="Input")
+	TSubclassOf<ACHWeaponBase> InitialWeaponClass;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
+	ACHWeaponBase* CurrentWeapon;
+
+	UPROPERTY(BlueprintReadOnly)
+	bool bIsAiming = false;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Gameplay")
+	TSubclassOf<UCameraModifier> ADSCameraModifierClass;
+
+	UCameraModifier* ADSCameraModifier;
 	
 protected:
 
@@ -94,6 +119,21 @@ protected:
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoJumpEnd();
 
+	UFUNCTION(BlueprintCallable, Category="Input")
+	virtual void DoAimingDownSightStart();
+
+	UFUNCTION(BlueprintCallable, Category="Input")
+	virtual void DoAimingDownSightStop();
+	
+	UFUNCTION(BlueprintCallable, Category="Input")
+	virtual void DoPrimaryFireStart();
+
+	UFUNCTION(BlueprintCallable, Category="Input")
+	virtual void DoPrimaryFireEnd();
+
+	UFUNCTION(BlueprintCallable, Category="Input")
+	virtual void DoReload();	
+	
 	void Input_AbilityInputTagPressed(FGameplayTag InputTag);
 	
 	void Input_AbilityInputTagReleased(FGameplayTag InputTag);

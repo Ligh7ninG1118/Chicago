@@ -146,7 +146,10 @@ public:
 	void StartFiring();
 	
 	UFUNCTION(BlueprintCallable)
-	void StopFiring();	
+	void StopFiring();
+
+	UFUNCTION(BlueprintCallable)
+	virtual void Reload();
 
 protected:
 	virtual void Fire();
@@ -154,9 +157,6 @@ protected:
 	virtual void ShootHitScan();
 
 	virtual bool CanFire();
-	
-	UFUNCTION(BlueprintCallable)
-	virtual void Reload();
 
 	UFUNCTION()
 	virtual void FinishReloadByNotify(FName NotifyName, const FBranchingPointNotifyPayload& BranchingPointNotifyPayload);

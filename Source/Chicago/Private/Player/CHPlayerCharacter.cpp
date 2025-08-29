@@ -10,9 +10,11 @@
 #include "GameplayTagContainer.h"
 #include "InputActionValue.h"
 #include "AbilitySystem/CHAbilitySystemComponent.h"
+#include "Camera/CameraModifier.h"
 #include "Equipments/CHWeaponBase.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Input/CHEnhancedInputComponent.h"
+#include "Player/CHPlayerController.h"
 
 ACHPlayerCharacter::ACHPlayerCharacter(const class FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -61,6 +63,25 @@ ACHPlayerCharacter::ACHPlayerCharacter(const class FObjectInitializer& ObjectIni
 	GetCharacterMovement()->AirControl = 0.5f;
 }
 
+void ACHPlayerCharacter::BeginPlay()
+{
+	FActorSpawnParameters SpawnParameters;
+	SpawnParameters.Owner = this;
+	SpawnParameters.Instigator = this;
+	
+	AActor* Weapon = GetWorld()->SpawnActor(InitialWeaponClass, nullptr, nullptr, SpawnParameters);
+	CurrentWeapon = Cast<ACHWeaponBase>(Weapon);
+
+	if (auto* PlayerController = Cast<ACHPlayerController>(GetController()))
+	{
+		ADSCameraModifier = PlayerController->PlayerCameraManager->AddNewCameraModifier(ADSCameraModifierClass);
+		ADSCameraModifier->DisableModifier(true);
+	}
+	
+	// Calls BeginPlay on BP class last
+	Super::BeginPlay();
+}
+
 void ACHPlayerCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
@@ -84,6 +105,14 @@ void ACHPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ACHPlayerCharacter::LookInput);
 		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &ACHPlayerCharacter::LookInput);
 
+		EnhancedInputComponent->BindAction(PrimaryFireAction, ETriggerEvent::Started, this, &ACHPlayerCharacter::DoPrimaryFireStart);
+		EnhancedInputComponent->BindAction(PrimaryFireAction, ETriggerEvent::Completed, this, &ACHPlayerCharacter::DoPrimaryFireEnd);
+
+		EnhancedInputComponent->BindAction(ADSAction, ETriggerEvent::Started, this, &ACHPlayerCharacter::DoAimingDownSightStart);
+		EnhancedInputComponent->BindAction(ADSAction, ETriggerEvent::Completed, this, &ACHPlayerCharacter::DoAimingDownSightStop);
+
+		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this, &ACHPlayerCharacter::DoReload);
+		
 		if (AbilitiesInputConfig != nullptr)
 		{
 			TArray<uint32> BindHandles;
@@ -163,6 +192,35 @@ void ACHPlayerCharacter::DoJumpEnd()
 {
 	// pass StopJumping to the character
 	StopJumping();
+}
+
+void ACHPlayerCharacter::DoAimingDownSightStart()
+{
+	GetAbilitySystemComponent()->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("GAS.Character.Action.Aiming")));
+	bIsAiming = true;
+	ADSCameraModifier->EnableModifier();
+}
+
+void ACHPlayerCharacter::DoAimingDownSightStop()
+{
+	GetAbilitySystemComponent()->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("GAS.Character.Action.Aiming")));
+	bIsAiming = false;
+	ADSCameraModifier->DisableModifier();
+}
+
+void ACHPlayerCharacter::DoPrimaryFireStart()
+{
+	CurrentWeapon->StartFiring();
+}
+
+void ACHPlayerCharacter::DoPrimaryFireEnd()
+{
+	CurrentWeapon->StopFiring();
+}
+
+void ACHPlayerCharacter::DoReload()
+{
+	CurrentWeapon->Reload();
 }
 
 void ACHPlayerCharacter::Input_AbilityInputTagPressed(FGameplayTag InputTag)
