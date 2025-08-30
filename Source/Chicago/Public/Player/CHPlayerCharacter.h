@@ -4,9 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "Character/CHCharacterBase.h"
+#include "Components/TimelineComponent.h"
 #include "Equipments/WeaponHolder.h"
 #include "CHPlayerCharacter.generated.h"
 
+class UTimelineComponent;
 class UInputComponent;
 class USkeletalMeshComponent;
 class UCameraComponent;
@@ -15,6 +17,16 @@ struct FInputActionValue;
 struct FGameplayTag;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FRecoilUpdateDelegate, FVector2f, Recoil);
+
+
+UENUM(BlueprintType)
+enum class ECanLeanState : uint8
+{
+	NoLean = 0,
+	CanLeanLeft,
+	CanLeanRight,
+	CanLeanOver,
+};
 
 /**
  * 
@@ -119,9 +131,9 @@ private:
 	virtual void DoReload();	
 
 	//Handle Gameplay Ability Input Bindings
-	void Input_AbilityInputTagPressed(FGameplayTag InputTag);
+	void AbilityInputTagPressed(FGameplayTag InputTag);
 	
-	void Input_AbilityInputTagReleased(FGameplayTag InputTag);
+	void AbilityInputTagReleased(FGameplayTag InputTag);
 	
 #pragma endregion Input
 
@@ -149,14 +161,64 @@ protected:
 #pragma endregion Weapon
 
 #pragma region Camera
-
-#pragma endregion Camera
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera")
 	TSubclassOf<UCameraModifier> ADSCameraModifierClass;
     
 	UCameraModifier* ADSCameraModifier;
+	
+#pragma endregion Camera
+	
+#pragma region Contextual Lean
+
+protected:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Contextual Lean")
+	UTimelineComponent* LeanTimeline;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Contextual Lean")
+	UCurveFloat* LeanCurve;
+
+	UFUNCTION()
+	virtual void OnLeanTimelineUpdate(float Value);
+
+	UFUNCTION()
+	virtual void OnLeanTimelineFinished();
+
+	UPROPERTY()
+	TEnumAsByte<ETimelineDirection::Type> LeanTimelineDirection;
+	
+	UFUNCTION(BlueprintCallable, Category = "Contextual Lean")
+	virtual void CanContextualLeanCheck();
+
+	UFUNCTION(BlueprintCallable, Category = "Contextual Lean")
+	virtual void ContextualLean(bool IsStartLeaning);
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Contextual Lean")
+	float SideStepDistance = 50.0f;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Contextual Lean")
+	float WallCheckDistance = 100.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Contextual Lean")
+	float SideWallCheckDeg = 45.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Contextual Lean")
+	float SideWallCheckDistance = 300.0f;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Contextual Lean")
+	ECanLeanState CanLeanState;
+
+	FVector MeshStartingRelativeOffset;
+	FVector MeshTargetOffset;
+
+	bool bIsCloseToWall = false;
+	bool bIsLeaning = false;
+	bool bHasLeaned = false;
+	bool bHasFinishLeaned = false;
+	
+#pragma endregion Contextual Leaning
+
 
 #pragma region IWeaponHolder Interface
 	

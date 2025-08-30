@@ -11,10 +11,13 @@
 #include "InputActionValue.h"
 #include "AbilitySystem/CHAbilitySystemComponent.h"
 #include "Camera/CameraModifier.h"
+#include "Components/TimelineComponent.h"
 #include "Equipments/CHWeaponBase.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Input/CHEnhancedInputComponent.h"
 #include "Player/CHPlayerController.h"
+
+#pragma region Character Overrides
 
 ACHPlayerCharacter::ACHPlayerCharacter(const class FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -61,6 +64,8 @@ ACHPlayerCharacter::ACHPlayerCharacter(const class FObjectInitializer& ObjectIni
 	// Configure character movement
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
 	GetCharacterMovement()->AirControl = 0.5f;
+
+	LeanTimeline = CreateDefaultSubobject<UTimelineComponent>("LeanTimeline");
 }
 
 void ACHPlayerCharacter::BeginPlay()
@@ -77,6 +82,17 @@ void ACHPlayerCharacter::BeginPlay()
 		ADSCameraModifier = PlayerController->PlayerCameraManager->AddNewCameraModifier(ADSCameraModifierClass);
 		ADSCameraModifier->DisableModifier(true);
 	}
+
+	FOnTimelineFloat InterpFloat;
+	InterpFloat.BindUFunction(this, FName("OnLeanTimelineUpdate"));
+	LeanTimeline->AddInterpFloat(LeanCurve, InterpFloat);
+
+	FOnTimelineEvent FinishedEvent;
+	FinishedEvent.BindUFunction(this, FName("OnLeanTimelineFinished"));
+	LeanTimeline->SetTimelineFinishedFunc(FinishedEvent);
+
+	LeanTimeline->SetPropertySetObject(this);
+	LeanTimeline->SetDirectionPropertyName(FName("LeanTimelineDirection"));
 	
 	// Calls BeginPlay on BP class last
 	Super::BeginPlay();
@@ -87,6 +103,8 @@ void ACHPlayerCharacter::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 
 	ProcessRecoil(DeltaSeconds);
+
+	CanContextualLeanCheck();
 }
 
 void ACHPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -116,7 +134,7 @@ void ACHPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		if (AbilitiesInputConfig != nullptr)
 		{
 			TArray<uint32> BindHandles;
-			EnhancedInputComponent->BindAbilityAction(AbilitiesInputConfig, this, &ThisClass::Input_AbilityInputTagPressed, &ThisClass::Input_AbilityInputTagReleased, BindHandles);
+			EnhancedInputComponent->BindAbilityAction(AbilitiesInputConfig, this, &ThisClass::AbilityInputTagPressed, &ThisClass::AbilityInputTagReleased, BindHandles);
 		}
 	}
 	else
@@ -125,22 +143,10 @@ void ACHPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	}
 }
 
+#pragma endregion Character Overrides
 
-void ACHPlayerCharacter::ProcessRecoil(float DeltaTime)
-{
-	GEngine->AddOnScreenDebugMessage(556, 1.0f, FColor::Emerald, FString::Printf(TEXT("Recoil Target: %.2f, %.2f"), RecoilTarget.X, RecoilTarget.Y));
-	
-	if (RecoilTarget.Length() <= KINDA_SMALL_NUMBER)
-		return;
-	
-	FVector SmoothTarget = FMath::VInterpConstantTo(FVector::Zero(), FVector(RecoilTarget.X, RecoilTarget.Y, 0.0f), DeltaTime, RecoilSmoothClimbSpeed);
 
-	AddControllerYawInput(SmoothTarget.X);
-	AddControllerPitchInput(SmoothTarget.Y);
-
-	RecoilTarget.X = FMath::Max(RecoilTarget.X - SmoothTarget.X, 0.0f);
-	RecoilTarget.Y = FMath::Max(RecoilTarget.Y - SmoothTarget.Y, 0.0f);
-}
+#pragma region Input
 
 void ACHPlayerCharacter::MoveInput(const FInputActionValue& Value)
 {
@@ -199,6 +205,13 @@ void ACHPlayerCharacter::DoAimingDownSightStart()
 	GetAbilitySystemComponent()->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("GAS.Character.Action.Aiming")));
 	bIsAiming = true;
 	ADSCameraModifier->EnableModifier();
+
+	if (CanLeanState == ECanLeanState::CanLeanLeft || CanLeanState == ECanLeanState::CanLeanRight)
+	{
+		bHasLeaned = true;
+		bHasFinishLeaned = false;
+		ContextualLean(true);
+	}
 }
 
 void ACHPlayerCharacter::DoAimingDownSightStop()
@@ -206,6 +219,9 @@ void ACHPlayerCharacter::DoAimingDownSightStop()
 	GetAbilitySystemComponent()->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("GAS.Character.Action.Aiming")));
 	bIsAiming = false;
 	ADSCameraModifier->DisableModifier();
+
+	if (bHasLeaned)
+		ContextualLean(false);
 }
 
 void ACHPlayerCharacter::DoPrimaryFireStart()
@@ -223,7 +239,7 @@ void ACHPlayerCharacter::DoReload()
 	CurrentWeapon->Reload();
 }
 
-void ACHPlayerCharacter::Input_AbilityInputTagPressed(FGameplayTag InputTag)
+void ACHPlayerCharacter::AbilityInputTagPressed(FGameplayTag InputTag)
 {
 	if (AbilitySystemComponent != nullptr)
 	{
@@ -234,7 +250,7 @@ void ACHPlayerCharacter::Input_AbilityInputTagPressed(FGameplayTag InputTag)
 	}
 }
 
-void ACHPlayerCharacter::Input_AbilityInputTagReleased(FGameplayTag InputTag)
+void ACHPlayerCharacter::AbilityInputTagReleased(FGameplayTag InputTag)
 {
 	if (AbilitySystemComponent != nullptr)
 	{
@@ -244,6 +260,130 @@ void ACHPlayerCharacter::Input_AbilityInputTagReleased(FGameplayTag InputTag)
 		}
 	}
 }
+#pragma endregion Input
+
+#pragma region Weapon
+
+void ACHPlayerCharacter::ProcessRecoil(float DeltaTime)
+{
+	//GEngine->AddOnScreenDebugMessage(556, 1.0f, FColor::Emerald, FString::Printf(TEXT("Recoil Target: %.2f, %.2f"), RecoilTarget.X, RecoilTarget.Y));
+	
+	if (RecoilTarget.Length() <= KINDA_SMALL_NUMBER)
+		return;
+	
+	FVector SmoothTarget = FMath::VInterpConstantTo(FVector::Zero(), FVector(RecoilTarget.X, RecoilTarget.Y, 0.0f), DeltaTime, RecoilSmoothClimbSpeed);
+
+	AddControllerYawInput(SmoothTarget.X);
+	AddControllerPitchInput(SmoothTarget.Y);
+
+	RecoilTarget.X = FMath::Max(RecoilTarget.X - SmoothTarget.X, 0.0f);
+	RecoilTarget.Y = FMath::Max(RecoilTarget.Y - SmoothTarget.Y, 0.0f);
+}
+
+#pragma endregion Weapon
+
+#pragma region Contextual Lean
+
+void ACHPlayerCharacter::OnLeanTimelineUpdate(float Value)
+{
+	FVector LerpOffset = FMath::Lerp(MeshStartingRelativeOffset, MeshTargetOffset, Value);
+	GetMesh()->SetRelativeLocation(LerpOffset);
+}
+
+void ACHPlayerCharacter::OnLeanTimelineFinished()
+{
+	if (LeanTimelineDirection == ETimelineDirection::Forward)
+	{
+		bHasFinishLeaned = true;
+	}
+}
+
+void ACHPlayerCharacter::CanContextualLeanCheck()
+{
+	CanLeanState = ECanLeanState::NoLean;
+
+	// Check if we are close to a wall
+	const FVector CamPos = FirstPersonCameraComponent->GetComponentLocation();
+	const FVector CamFwd = FirstPersonCameraComponent->GetForwardVector();
+	const FVector CamRight = FirstPersonCameraComponent->GetRightVector();
+
+	FHitResult OutHit;
+	FVector WallCheckEndPos = CamPos + CamFwd * WallCheckDistance;
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+	
+	bIsCloseToWall = GetWorld()->LineTraceSingleByChannel(OutHit, CamPos, WallCheckEndPos, ECC_WorldDynamic, QueryParams);
+	//DrawDebugLine(GetWorld(), CamPos, WallCheckEndPos, FColor::Green, false, 0.2f);
+
+	// If not close to wall, early out
+	if (!bIsCloseToWall)
+		return;
+
+	// If leaning and close to wall, cancel lean
+	if (bIsCloseToWall && bHasFinishLeaned)
+	{
+		LeanTimeline->Reverse();
+	}
+
+	// Check if our frontal left side is blocked by a wall
+	FVector LeftSideWallCheck = CamFwd.RotateAngleAxis(-SideWallCheckDeg, FVector::UpVector);
+	FVector LeftWallCheckEndPos = CamPos + LeftSideWallCheck * SideWallCheckDistance;
+	
+	//DrawDebugLine(GetWorld(), CamPos, LeftWallCheckEndPos, FColor::Blue, false, 0.2f);
+	if (GetWorld()->LineTraceSingleByChannel(OutHit, CamPos, LeftWallCheckEndPos, ECC_WorldDynamic, QueryParams))
+	{
+		// Left side is blocked, now checking if sidestep to our right side can result in a clear line of sight
+		FVector PosAfterLeanRight = CamPos + CamRight * SideStepDistance;
+		FVector RightLOSCheckEndPos = PosAfterLeanRight + CamFwd * SideWallCheckDistance;
+		
+		//DrawDebugLine(GetWorld(), PosAfterLeanRight, RightLOSCheckEndPos, FColor::Cyan, false, 0.2f);
+		if (!GetWorld()->LineTraceSingleByChannel(OutHit, PosAfterLeanRight, RightLOSCheckEndPos, ECC_WorldDynamic, QueryParams))
+		{
+			CanLeanState = ECanLeanState::CanLeanRight;
+			return;
+		}
+	}
+
+	// Check if our frontal right side is blocked by a wall
+	FVector RightSideWallCheck = CamFwd.RotateAngleAxis(SideWallCheckDeg, FVector::UpVector);
+	FVector RightWallCheckEndPos = CamPos + RightSideWallCheck * SideWallCheckDistance;
+
+	//DrawDebugLine(GetWorld(), CamPos, RightWallCheckEndPos, FColor::Red, false, 0.2f);
+	if (GetWorld()->LineTraceSingleByChannel(OutHit, CamPos, RightWallCheckEndPos, ECC_WorldDynamic, QueryParams))
+	{
+		// Right side is blocked, now checking if sidestep to our left side can result in a clear line of sight
+		FVector PosAfterLeanLeft = CamPos + CamRight * SideStepDistance * (-1.0f);
+		FVector LeftLOSCheckEndPos = PosAfterLeanLeft + CamFwd * SideWallCheckDistance;
+
+		//DrawDebugLine(GetWorld(), PosAfterLeanLeft, LeftLOSCheckEndPos, FColor::Magenta, false, 0.2f);
+		if (!GetWorld()->LineTraceSingleByChannel(OutHit, PosAfterLeanLeft, LeftLOSCheckEndPos, ECC_WorldDynamic, QueryParams))
+		{
+			CanLeanState = ECanLeanState::CanLeanLeft;
+			return;
+		}
+	}
+}
+
+void ACHPlayerCharacter::ContextualLean(bool IsStartLeaning)
+{
+	if (IsStartLeaning)
+	{
+		MeshStartingRelativeOffset = GetMesh()->GetRelativeLocation();
+
+		MeshTargetOffset = MeshStartingRelativeOffset;
+		MeshTargetOffset.Y += SideStepDistance * (CanLeanState == ECanLeanState::CanLeanLeft ? -1.0f : 1.0f);
+		
+		LeanTimeline->Play();
+	}
+	else
+	{
+		LeanTimeline->Reverse();
+	}
+}
+
+#pragma endregion Contextual Leaning
+
+#pragma region IWeaponHolder Interface
 
 void ACHPlayerCharacter::AttachWeaponMeshes(ACHWeaponBase* Weapon)
 {
@@ -298,3 +438,6 @@ UAnimInstance* ACHPlayerCharacter::GetAnimInstance() const
 
 	return nullptr;
 }
+
+#pragma endregion IWeaponHolder Interface
+
