@@ -6,11 +6,15 @@
 #include "AbilitySystem/CHAttributeSetBase.h"
 #include "AbilitySystem/CHGameplayAbility.h"
 #include "Camera/CameraComponent.h"
+#include "Character/CHCharacterMovementComponent.h"
 #include "Equipments/CHInventoryManager.h"
 
 ACHCharacterBase::ACHCharacterBase(const class FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
+	: Super(ObjectInitializer.SetDefaultSubobjectClass<UCHCharacterMovementComponent>(CharacterMovementComponentName))
 {
+	CHCMC = Cast<UCHCharacterMovementComponent>(GetCharacterMovement());
+
+	
 	HardRefASC = CreateDefaultSubobject<UCHAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	HardRefASC->SetIsReplicated(true);
 	HardRefASC->SetReplicationMode(EGameplayEffectReplicationMode::Full);

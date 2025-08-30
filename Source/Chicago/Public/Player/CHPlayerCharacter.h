@@ -81,6 +81,12 @@ protected:
 	class UInputAction* MouseLookAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category ="Input")
+	class UInputAction* CrouchAction;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category ="Input")
+	class UInputAction* SprintAction;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category ="Input")
 	class UInputAction* ADSAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category ="Input")
@@ -115,6 +121,15 @@ private:
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoJumpEnd();
 
+	UFUNCTION(BlueprintCallable, Category="Input")
+	virtual void DoCrouch();
+
+	UFUNCTION(BlueprintCallable, Category="Input")
+	virtual void DoSprintStart();
+
+	UFUNCTION(BlueprintCallable, Category="Input")
+	virtual void DoSprintStop();
+	
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoAimingDownSightStart();
 

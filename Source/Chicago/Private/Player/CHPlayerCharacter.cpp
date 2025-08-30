@@ -11,6 +11,7 @@
 #include "InputActionValue.h"
 #include "AbilitySystem/CHAbilitySystemComponent.h"
 #include "Camera/CameraModifier.h"
+#include "Character/CHCharacterMovementComponent.h"
 #include "Components/TimelineComponent.h"
 #include "Equipments/CHWeaponBase.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -123,6 +124,10 @@ void ACHPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ACHPlayerCharacter::LookInput);
 		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &ACHPlayerCharacter::LookInput);
 
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &ACHPlayerCharacter::DoCrouch);
+		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &ACHPlayerCharacter::DoSprintStart);
+		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &ACHPlayerCharacter::DoSprintStop);
+		
 		EnhancedInputComponent->BindAction(PrimaryFireAction, ETriggerEvent::Started, this, &ACHPlayerCharacter::DoPrimaryFireStart);
 		EnhancedInputComponent->BindAction(PrimaryFireAction, ETriggerEvent::Completed, this, &ACHPlayerCharacter::DoPrimaryFireEnd);
 
@@ -198,6 +203,21 @@ void ACHPlayerCharacter::DoJumpEnd()
 {
 	// pass StopJumping to the character
 	StopJumping();
+}
+
+void ACHPlayerCharacter::DoCrouch()
+{
+	//CHCMC->CrouchPressed();
+}
+
+void ACHPlayerCharacter::DoSprintStart()
+{
+	CHCMC->SprintPressed();
+}
+
+void ACHPlayerCharacter::DoSprintStop()
+{
+	CHCMC->SprintReleased();
 }
 
 void ACHPlayerCharacter::DoAimingDownSightStart()

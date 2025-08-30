@@ -9,6 +9,7 @@
 
 class UCameraComponent;
 class UCHInventoryManager;
+class UCHCharacterMovementComponent;
 class UAbilitySystemComponent;
 class UCHAbilitySystemComponent;
 class UCHAttributeSetBase;
@@ -22,6 +23,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
 	UCHInventoryManager* InventoryManager;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
+	UCHCharacterMovementComponent* CHCMC;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FirstPersonCameraComponent;
 	
