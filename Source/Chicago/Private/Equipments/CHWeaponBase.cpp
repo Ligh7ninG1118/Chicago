@@ -203,6 +203,9 @@ bool ACHWeaponBase::CanFire()
 {
 	if (!bIsFiring)
 		return false;
+
+	if (bIsReloading)
+		return false;
 	
 	if (WeaponHolder == nullptr)
 		return false;
