@@ -211,8 +211,10 @@ protected:
 
 	FVector MeshStartingRelativeOffset;
 	FVector MeshTargetOffset;
-
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Contextual Lean")
 	bool bIsCloseToWall = false;
+	
 	bool bIsLeaning = false;
 	bool bHasLeaned = false;
 	bool bHasFinishLeaned = false;

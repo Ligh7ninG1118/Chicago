@@ -302,15 +302,15 @@ void ACHPlayerCharacter::CanContextualLeanCheck()
 {
 	CanLeanState = ECanLeanState::NoLean;
 
-	// Check if we are close to a wall
+	FHitResult OutHit;
 	const FVector CamPos = FirstPersonCameraComponent->GetComponentLocation();
 	const FVector CamFwd = FirstPersonCameraComponent->GetForwardVector();
 	const FVector CamRight = FirstPersonCameraComponent->GetRightVector();
-
-	FHitResult OutHit;
-	FVector WallCheckEndPos = CamPos + CamFwd * WallCheckDistance;
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this);
+	
+	// Check if we are close to a wall
+	FVector WallCheckEndPos = CamPos + CamFwd * WallCheckDistance;
 	
 	bIsCloseToWall = GetWorld()->LineTraceSingleByChannel(OutHit, CamPos, WallCheckEndPos, ECC_WorldDynamic, QueryParams);
 	//DrawDebugLine(GetWorld(), CamPos, WallCheckEndPos, FColor::Green, false, 0.2f);
