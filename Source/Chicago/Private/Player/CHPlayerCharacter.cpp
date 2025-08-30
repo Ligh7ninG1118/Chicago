@@ -174,6 +174,10 @@ void ACHPlayerCharacter::LookInput(const FInputActionValue& Value)
 	// pass the axis values to the aim input
 	DoAim(LookInputVector.X, LookInputVector.Y);
 
+	if (TotalRecoilClimb.Length() >= KINDA_SMALL_NUMBER)
+	{
+		
+	}
 }
 
 void ACHPlayerCharacter::DoAim(float Yaw, float Pitch)
@@ -215,18 +219,19 @@ void ACHPlayerCharacter::DoCrouch()
 
 void ACHPlayerCharacter::DoSprintStart()
 {
+	GetAbilitySystemComponent()->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("GAS.Character.Movement.Sprinting")));
 	CHCMC->SprintPressed();
 }
 
 void ACHPlayerCharacter::DoSprintStop()
 {
+	GetAbilitySystemComponent()->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("GAS.Character.Movement.Sprinting")));
 	CHCMC->SprintReleased();
 }
 
 void ACHPlayerCharacter::DoAimingDownSightStart()
 {
 	GetAbilitySystemComponent()->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("GAS.Character.Action.Aiming")));
-	bIsAiming = true;
 	ADSCameraModifier->EnableModifier();
 
 	if (CanLeanState == ECanLeanState::CanLeanLeft || CanLeanState == ECanLeanState::CanLeanRight)
@@ -240,7 +245,6 @@ void ACHPlayerCharacter::DoAimingDownSightStart()
 void ACHPlayerCharacter::DoAimingDownSightStop()
 {
 	GetAbilitySystemComponent()->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("GAS.Character.Action.Aiming")));
-	bIsAiming = false;
 	ADSCameraModifier->DisableModifier();
 
 	if (bHasLeaned)

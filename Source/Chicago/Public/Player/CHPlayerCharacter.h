@@ -184,9 +184,6 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
 	ACHWeaponBase* CurrentWeapon;
-
-	UPROPERTY(BlueprintReadOnly)
-	bool bIsAiming = false;
 	
 	FVector2f RecoilTarget = FVector2f::Zero();
 
