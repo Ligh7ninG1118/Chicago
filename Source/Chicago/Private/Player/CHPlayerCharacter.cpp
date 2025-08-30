@@ -159,20 +159,20 @@ void ACHPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 void ACHPlayerCharacter::MoveInput(const FInputActionValue& Value)
 {
 	// get the Vector2D move axis
-	FVector2D MovementVector = Value.Get<FVector2D>();
+	MoveInputVector = Value.Get<FVector2D>();
 
 	// pass the axis values to the move input
-	DoMove(MovementVector.X, MovementVector.Y);
+	DoMove(MoveInputVector.X, MoveInputVector.Y);
 
 }
 
 void ACHPlayerCharacter::LookInput(const FInputActionValue& Value)
 {
 	// get the Vector2D look axis
-	FVector2D LookAxisVector = Value.Get<FVector2D>();
+	LookInputVector = Value.Get<FVector2D>();
 
 	// pass the axis values to the aim input
-	DoAim(LookAxisVector.X, LookAxisVector.Y);
+	DoAim(LookInputVector.X, LookInputVector.Y);
 
 }
 

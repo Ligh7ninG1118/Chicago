@@ -149,6 +149,13 @@ private:
 	void AbilityInputTagPressed(FGameplayTag InputTag);
 	
 	void AbilityInputTagReleased(FGameplayTag InputTag);
+protected:
+	// Exposed for Animation Blueprint
+	UPROPERTY(BlueprintReadOnly, Category="Input")
+	FVector2D LookInputVector = FVector2D::Zero();
+	
+	UPROPERTY(BlueprintReadOnly, Category="Input")
+	FVector2D MoveInputVector = FVector2D::Zero();
 	
 #pragma endregion Input
 
