@@ -38,12 +38,14 @@ void UCHAbilitySystemComponent::AbilityInputTagReleased(const FGameplayTag& Inpu
 void UCHAbilitySystemComponent::ProcessAbilityInput(float DeltaTime, bool bGamePaused)
 {
 	auto AllTags = GameplayTagCountContainer.GetExplicitGameplayTags();
+
+	FString Output = "";
 	for (auto Tag : AllTags)
 	{
-		if (GEngine)
-			GEngine->AddOnScreenDebugMessage(50, 2.0f, FColor::Yellow, *Tag.ToString());
+		Output += Tag.ToString() + " ";
 	}
-	
+	GEngine->AddOnScreenDebugMessage(50, 2.0f, FColor::Yellow, *Output);
+
 	//TODO: Check input blocked tag
 
 	static TArray<FGameplayAbilitySpecHandle> AbilitiesToActivate;
