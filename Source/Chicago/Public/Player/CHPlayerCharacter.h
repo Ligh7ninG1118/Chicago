@@ -176,17 +176,23 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	float RecenterRecoverSpeed = 110.0f;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	float RecenterDelayTime = 0.1f;
+	
 	virtual void ProcessRecoilClimb(float DeltaTime);
 
 	virtual void ProcessRecentering(float DeltaTime);
 
-	bool bShouldRecenter = false;
+	float TimeOfLastShot = 0.0f;
+	
+	bool bShouldProcessRecoil = false;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
 	ACHWeaponBase* CurrentWeapon;
 	
 	FVector2f RecoilTarget = FVector2f::Zero();
-
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
 	FVector2f TotalRecoilClimb = FVector2f::Zero();
 
 #pragma endregion Weapon
