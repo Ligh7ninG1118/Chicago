@@ -161,9 +161,19 @@ protected:
 	FName FirstPersonWeaponSocket = FName("ik_hand_gun");
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-	float RecoilSmoothClimbSpeed = 7.0f;
+	float RecoilSmoothClimbSpeed = 5.0f;
 
-	virtual void ProcessRecoil(float DeltaTime);
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	float MaxRecoilVerticalClimbDeg = 10.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	float RecenterRecoverSpeed = 110.0f;
+
+	virtual void ProcessRecoilClimb(float DeltaTime);
+
+	virtual void ProcessRecentering(float DeltaTime);
+
+	bool bShouldRecenter = false;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
 	ACHWeaponBase* CurrentWeapon;
@@ -172,6 +182,8 @@ protected:
 	bool bIsAiming = false;
 	
 	FVector2f RecoilTarget = FVector2f::Zero();
+
+	FVector2f TotalRecoilClimb = FVector2f::Zero();
 
 #pragma endregion Weapon
 
@@ -235,7 +247,6 @@ protected:
 	bool bHasFinishLeaned = false;
 	
 #pragma endregion Contextual Leaning
-
 
 #pragma region IWeaponHolder Interface
 	

@@ -103,7 +103,10 @@ void ACHPlayerCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	ProcessRecoil(DeltaSeconds);
+	ProcessRecoilClimb(DeltaSeconds);
+
+	if (bShouldRecenter)
+		ProcessRecentering(DeltaSeconds);
 
 	CanContextualLeanCheck();
 }
@@ -247,11 +250,13 @@ void ACHPlayerCharacter::DoAimingDownSightStop()
 void ACHPlayerCharacter::DoPrimaryFireStart()
 {
 	CurrentWeapon->StartFiring();
+	bShouldRecenter = false;
 }
 
 void ACHPlayerCharacter::DoPrimaryFireEnd()
 {
 	CurrentWeapon->StopFiring();
+	bShouldRecenter = true;
 }
 
 void ACHPlayerCharacter::DoReload()
@@ -284,21 +289,42 @@ void ACHPlayerCharacter::AbilityInputTagReleased(FGameplayTag InputTag)
 
 #pragma region Weapon
 
-void ACHPlayerCharacter::ProcessRecoil(float DeltaTime)
+void ACHPlayerCharacter::ProcessRecoilClimb(float DeltaTime)
 {
-	//GEngine->AddOnScreenDebugMessage(556, 1.0f, FColor::Emerald, FString::Printf(TEXT("Recoil Target: %.2f, %.2f"), RecoilTarget.X, RecoilTarget.Y));
-	
 	if (RecoilTarget.Length() <= KINDA_SMALL_NUMBER)
 		return;
-	
+
+	// Smooth recoil climb
 	FVector SmoothTarget = FMath::VInterpConstantTo(FVector::Zero(), FVector(RecoilTarget.X, RecoilTarget.Y, 0.0f), DeltaTime, RecoilSmoothClimbSpeed);
 
 	AddControllerYawInput(SmoothTarget.X);
 	AddControllerPitchInput(SmoothTarget.Y);
 
-	RecoilTarget.X = FMath::Max(RecoilTarget.X - SmoothTarget.X, 0.0f);
-	RecoilTarget.Y = FMath::Max(RecoilTarget.Y - SmoothTarget.Y, 0.0f);
+	RecoilTarget.X -= SmoothTarget.X;
+	RecoilTarget.Y -= SmoothTarget.Y;
 }
+
+void ACHPlayerCharacter::ProcessRecentering(float DeltaTime)
+{
+	if (TotalRecoilClimb.Length() <= 0.3f)
+	{
+		return;
+	}
+	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Orange, FString::Printf(TEXT("TRT: %.2f %.2f"), TotalRecoilClimb.X, TotalRecoilClimb.Y));
+
+	FVector RecenterTarget = FMath::VInterpTo(FVector(TotalRecoilClimb.X, TotalRecoilClimb.Y, 0.0f), FVector::Zero(), DeltaTime, RecenterRecoverSpeed);
+	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Orange, FString::Printf(TEXT("Recenter: %.2f %.2f"), RecenterTarget.X, RecenterTarget.Y));
+
+	AddControllerYawInput(-RecenterTarget.X);
+	AddControllerPitchInput(-RecenterTarget.Y);
+
+	TotalRecoilClimb.X -= RecenterTarget.X;
+	TotalRecoilClimb.Y -= RecenterTarget.Y;
+
+	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Orange, FString::Printf(TEXT("TRT After: %.2f %.2f"), TotalRecoilClimb.X, TotalRecoilClimb.Y));
+
+}
+
 
 #pragma endregion Weapon
 
@@ -435,7 +461,15 @@ float ACHPlayerCharacter::PlayReloadMontage(UAnimMontage* Montage)
 
 void ACHPlayerCharacter::HandleWeaponRecoil(FVector2f Recoil)
 {
-	RecoilTarget += Recoil;
+	TotalRecoilClimb += Recoil;
+
+	RecoilTarget.X += Recoil.X;
+	
+	// Limit the maximum recoil climb on vertical axis
+	if (TotalRecoilClimb.Y >= -MaxRecoilVerticalClimbDeg)
+		RecoilTarget.Y += Recoil.Y;
+	
+	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Orange, FString::Printf(TEXT("RT: %.2f %.2f"), TotalRecoilClimb.X, TotalRecoilClimb.Y));
 }
 
 float ACHPlayerCharacter::GetMovementAccuracyPenalty() const
