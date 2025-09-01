@@ -49,6 +49,8 @@ bool FStateTreeHasLineOfSightToTargetCondition::TestCondition(FStateTreeExecutio
 
 	FHitResult OutHit;
 
+	//TODO: Can't detect leaning character? Use GetMesh()?
+
 	// run a number of vertically offset line traces to the target location
 	for (int32 i = 0; i < InstanceData.NumberOfVerticalLineOfSightChecks - 1; ++i)
 	{

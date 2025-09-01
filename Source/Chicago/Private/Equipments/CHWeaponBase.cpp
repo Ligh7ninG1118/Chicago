@@ -199,7 +199,9 @@ void ACHWeaponBase::ShootHitScan()
 		else
 		{
 			if (HitResult.Component->IsSimulatingPhysics())
-				HitResult.Component->AddImpulse(-HitResult.ImpactNormal * PhysicalForce);
+			{
+				HitResult.Component->AddImpulseAtLocation(-HitResult.ImpactNormal * PhysicalForce, HitResult.ImpactPoint);
+			}
 		}
 		
 		

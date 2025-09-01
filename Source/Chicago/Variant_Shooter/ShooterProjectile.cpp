@@ -59,6 +59,10 @@ void AShooterProjectile::NotifyHit(class UPrimitiveComponent* MyComp, AActor* Ot
 	{
 		// give some physics impulse to the object
 		OtherComp->AddImpulseAtLocation(GetVelocity() * PhysicsForce, Hit.ImpactPoint);
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, OtherComp->GetName());
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("Damage: %.2f"), (GetVelocity() * PhysicsForce).Length()));
+
+
 	}
 
 	// have we hit a character?
