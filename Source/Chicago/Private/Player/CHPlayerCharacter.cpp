@@ -179,6 +179,12 @@ void ACHPlayerCharacter::LookInput(const FInputActionValue& Value)
 
 	if (TotalRecoilClimb.Length() >= KINDA_SMALL_NUMBER)
 	{
+		// If it's already recentering, clear TotalRecoilClimb altogether
+		if (GetWorld()->TimeSeconds - TimeOfLastShot >= RecenterDelayTime)
+		{
+			TotalRecoilClimb = FVector2f::Zero();
+		}
+		
 		TotalRecoilClimb.Y += LookInputVector.Y;
 		TotalRecoilClimb.X += LookInputVector.X;
 	}
