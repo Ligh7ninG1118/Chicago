@@ -5,6 +5,7 @@
 #include "Equipments/WeaponHolder.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
+#include "Hittable.h"
 #include "Abilities/GameplayAbility.h"
 #include "Camera/CameraComponent.h"
 #include "Character/CHCharacterBase.h"
@@ -165,21 +166,21 @@ void ACHWeaponBase::ShootHitScan()
 	if (bHasHit)
 	{
 		DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 10.0f, 8, FColor::Green, false, 5.0f);
-		
-		if (auto* HitActor = Cast<ACHCharacterBase>(HitResult.GetActor()))
+
+		// If is Hittable Target
+		if (HitResult.GetActor() && HitResult.GetActor()->Implements<UHittable>())
 		{
-			//IHittable?
-			//damage, instigator, shouldShowHitMarker
+			// Send HitMessage (Hitmarker, sound effect etc.)
+			if (IHittable::Execute_ShouldShowHitEffect(HitResult.GetActor()))
+			{
+				FCHActionMessage ActionMsg;
+				ActionMsg.Instigator = GetOwner();
+				ActionMsg.Target = HitResult.GetActor();
+				UGameplayMessageSubsystem::Get(this).BroadcastMessage(HitMessageChannelTag, ActionMsg);
+			}
 
-			FCHActionMessage ActionMsg;
-			ActionMsg.Instigator = GetOwner();
-			ActionMsg.Target = HitActor;
-
-			UGameplayMessageSubsystem::Get(this).BroadcastMessage(HitMessageChannelTag, ActionMsg);
-			
-			UAbilitySystemComponent* ASC = HitActor->GetAbilitySystemComponent();
-			float finalDamage = -DefaultDamage;
-			
+			// Calculate final weapon damage
+			float finalDamage = -BaseDamage;
 			if (auto* PhysMatWithTag = Cast<UPhysicalMaterialWithTag>(HitResult.PhysMaterial))
 			{
 				if (BodyPartDamageModifierMap.Contains(PhysMatWithTag->AttachedTag))
@@ -187,14 +188,21 @@ void ACHWeaponBase::ShootHitScan()
 					finalDamage *= BodyPartDamageModifierMap[PhysMatWithTag->AttachedTag];
 				}
 			}
-
+			//TODO: Use ASC from owner?
 			FGameplayEffectSpecHandle DamageEffectSpecHandle =
 				UAbilitySystemBlueprintLibrary::MakeSpecHandleByClass(DamageEffectClass, nullptr, nullptr, 1.0f);
 
 			DamageEffectSpecHandle.Data.Get()->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(FName("GAS.EffectData.Damage")), finalDamage);
-
-			ASC->ApplyGameplayEffectSpecToSelf(*DamageEffectSpecHandle.Data.Get());
+			
+			IHittable::Execute_HandleHit(HitResult.GetActor(), HitResult, GetOwner(), DamageEffectSpecHandle, PhysicalForce);
 		}
+		else
+		{
+			if (HitResult.Component->IsSimulatingPhysics())
+				HitResult.Component->AddImpulse(-HitResult.ImpactNormal * PhysicalForce);
+		}
+		
+		
 	}
 	
 }

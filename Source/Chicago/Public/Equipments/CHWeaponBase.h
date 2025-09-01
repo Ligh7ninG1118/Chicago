@@ -76,13 +76,16 @@ protected:
 	bool bIsFiring = false;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon: Gameplay" )
-	float DefaultDamage;
+	float BaseDamage;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon: Gameplay" )
 	TMap<FGameplayTag, float> BodyPartDamageModifierMap;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon: Gameplay")
 	TSubclassOf<UGameplayEffect> DamageEffectClass;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon: Gameplay" )
+	float PhysicalForce;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon: Recoil")
 	float HipFireSpread;

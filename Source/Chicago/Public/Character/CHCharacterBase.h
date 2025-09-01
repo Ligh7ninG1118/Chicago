@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystemInterface.h"
+#include "Hittable.h"
 #include "GameFramework/Character.h"
 #include "CHCharacterBase.generated.h"
 
@@ -16,7 +17,7 @@ class UCHAttributeSetBase;
 struct FOnAttributeChangeData;
 
 UCLASS()
-class CHICAGO_API ACHCharacterBase : public ACharacter, public IAbilitySystemInterface
+class CHICAGO_API ACHCharacterBase : public ACharacter, public IAbilitySystemInterface, public IHittable
 {
 	GENERATED_BODY()
 protected:
@@ -75,5 +76,9 @@ protected:
 	FDelegateHandle HealthChangeDelegateHandle;
 
 	virtual void HealthChanged(const FOnAttributeChangeData& Data);
+
+	bool ShouldShowHitEffect_Implementation() const;
+	
+	void HandleHit_Implementation(const FHitResult& HitResult, const AActor* Instigator, float Damage, float HitForce);
 
 };

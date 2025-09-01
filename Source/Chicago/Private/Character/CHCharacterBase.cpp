@@ -116,6 +116,16 @@ void ACHCharacterBase::HealthChanged(const FOnAttributeChangeData& Data)
 	}
 }
 
+bool ACHCharacterBase::ShouldShowHitEffect_Implementation() const
+{
+	return true;
+}
+
+void ACHCharacterBase::HandleHit_Implementation(const FHitResult& HitResult, const AActor* Shooter, float Damage, float HitForce)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Hit"));
+}
+
 
 
 

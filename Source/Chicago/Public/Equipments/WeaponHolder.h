@@ -12,7 +12,7 @@ class ACHWeaponBase;
 /**
  * 
  */
-UINTERFACE()
+UINTERFACE(MinimalAPI)
 class UWeaponHolder : public UInterface
 {
 	GENERATED_BODY()
