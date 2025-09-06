@@ -30,6 +30,8 @@ public:
 	FOnTagUpdateDelegate OnTagUpdate;
 	
 protected:
+	virtual void AbilitySpecInputPressed(FGameplayAbilitySpec& Spec) override;
+	virtual void AbilitySpecInputReleased(FGameplayAbilitySpec& Spec) override;
 
 	virtual void OnTagUpdated(const FGameplayTag& Tag, bool TagExists) override;
 	

@@ -35,6 +35,32 @@ void UCHAbilitySystemComponent::AbilityInputTagReleased(const FGameplayTag& Inpu
 	}
 }
 
+void UCHAbilitySystemComponent::AbilitySpecInputPressed(FGameplayAbilitySpec& Spec)
+{
+	Super::AbilitySpecInputPressed(Spec);
+
+	if (Spec.IsActive())
+	{
+		TArray<UGameplayAbility*> Instances = Spec.GetAbilityInstances();
+		const FGameplayAbilityActivationInfo& ActivationInfo = Instances.Last()->GetCurrentActivationInfoRef();
+		FPredictionKey OriginalPredictionKey = ActivationInfo.GetActivationPredictionKey();
+		InvokeReplicatedEvent(EAbilityGenericReplicatedEvent::InputPressed, Spec.Handle, OriginalPredictionKey);
+	}
+}
+
+void UCHAbilitySystemComponent::AbilitySpecInputReleased(FGameplayAbilitySpec& Spec)
+{
+	Super::AbilitySpecInputReleased(Spec);
+
+	if (Spec.IsActive())
+	{
+		TArray<UGameplayAbility*> Instances = Spec.GetAbilityInstances();
+		const FGameplayAbilityActivationInfo& ActivationInfo = Instances.Last()->GetCurrentActivationInfoRef();
+		FPredictionKey OriginalPredictionKey = ActivationInfo.GetActivationPredictionKey();
+		InvokeReplicatedEvent(EAbilityGenericReplicatedEvent::InputReleased, Spec.Handle, OriginalPredictionKey);
+	}
+}
+
 void UCHAbilitySystemComponent::ProcessAbilityInput(float DeltaTime, bool bGamePaused)
 {
 	auto AllTags = GameplayTagCountContainer.GetExplicitGameplayTags();
@@ -111,6 +137,8 @@ void UCHAbilitySystemComponent::ProcessAbilityInput(float DeltaTime, bool bGameP
 	InputPressedSpecHandles.Reset();
 	InputReleasedSpecHandles.Reset();
 }
+
+
 
 void UCHAbilitySystemComponent::OnTagUpdated(const FGameplayTag& Tag, bool TagExists)
 {
