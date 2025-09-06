@@ -78,12 +78,6 @@ void ACHPlayerCharacter::BeginPlay()
 	AActor* Weapon = GetWorld()->SpawnActor(InitialWeaponClass, nullptr, nullptr, SpawnParameters);
 	CurrentWeapon = Cast<ACHWeaponBase>(Weapon);
 
-	if (auto* PlayerController = Cast<ACHPlayerController>(GetController()))
-	{
-		ADSCameraModifier = PlayerController->PlayerCameraManager->AddNewCameraModifier(ADSCameraModifierClass);
-		ADSCameraModifier->DisableModifier(true);
-	}
-
 	FOnTimelineFloat InterpFloat;
 	InterpFloat.BindUFunction(this, FName("OnLeanTimelineUpdate"));
 	LeanTimeline->AddInterpFloat(LeanCurve, InterpFloat);
@@ -97,6 +91,15 @@ void ACHPlayerCharacter::BeginPlay()
 	
 	// Calls BeginPlay on BP class last
 	Super::BeginPlay();
+}
+
+void ACHPlayerCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	GetAbilitySystemComponent()->InitAbilityActorInfo(this, this);
+
+	SetOwner(NewController);
 }
 
 void ACHPlayerCharacter::Tick(float DeltaSeconds)
@@ -241,8 +244,8 @@ void ACHPlayerCharacter::DoSprintStop()
 
 void ACHPlayerCharacter::DoAimingDownSightStart()
 {
-	GetAbilitySystemComponent()->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("GAS.Character.Action.Aiming")));
-	ADSCameraModifier->EnableModifier();
+	//GetAbilitySystemComponent()->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("GAS.Character.Action.Aiming")));
+	//ADSCameraModifier->EnableModifier();
 
 	if (CanLeanState == ECanLeanState::CanLeanLeft || CanLeanState == ECanLeanState::CanLeanRight)
 	{
@@ -254,8 +257,8 @@ void ACHPlayerCharacter::DoAimingDownSightStart()
 
 void ACHPlayerCharacter::DoAimingDownSightStop()
 {
-	GetAbilitySystemComponent()->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("GAS.Character.Action.Aiming")));
-	ADSCameraModifier->DisableModifier();
+	//GetAbilitySystemComponent()->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("GAS.Character.Action.Aiming")));
+	//ADSCameraModifier->DisableModifier();
 
 	if (bHasLeaned)
 		ContextualLean(false);

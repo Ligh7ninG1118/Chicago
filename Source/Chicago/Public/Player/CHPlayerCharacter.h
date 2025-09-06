@@ -53,8 +53,11 @@ public:
 	ACHPlayerCharacter(const class FObjectInitializer& ObjectInitializer);
 
 	virtual void BeginPlay() override;
+	
+	virtual void PossessedBy(AController* NewController) override;
 
 	virtual void Tick(float DeltaSeconds) override;
+
 	
 protected:
 	/** Set up input action bindings */
