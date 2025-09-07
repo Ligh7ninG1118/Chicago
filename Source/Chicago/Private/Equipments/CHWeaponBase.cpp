@@ -6,6 +6,8 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "Hittable.h"
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Abilities/GameplayAbility.h"
 #include "Camera/CameraComponent.h"
 #include "Character/CHCharacterBase.h"
@@ -31,6 +33,11 @@ ACHWeaponBase::ACHWeaponBase()
 	MagazineMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Magazine Mesh"));
 	MagazineMesh->SetupAttachment(GunMesh, "Magazine");
 	MagazineMesh->SetCollisionProfileName("NoCollision");
+
+	MuzzlePosition = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Muzzle Position"));
+	MuzzlePosition->SetupAttachment(GunMesh);
+
+	NiagaraComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("Niagara Component"));
 }
 
 // Called when the game starts or when spawned
@@ -136,6 +143,18 @@ void ACHWeaponBase::Fire()
 		auto* Casing = GetWorld()->SpawnActor<AActor>(AmmoCasingClass, CasingSpawnTransform, SpawnParams);
 		//TODO: Use specific class for this, getting the casing mesh, and ignore actor (player character) when moving 
 	}
+
+	if (GunMuzzleEffect != nullptr)
+	{
+		NiagaraComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
+			GunMuzzleEffect,
+			MuzzlePosition,
+			NAME_None,
+			MuzzlePosition->GetSocketLocation(NAME_None),
+			GetOwner()->GetActorRotation(),
+			EAttachLocation::KeepWorldPosition,
+			true);
+	}
 	
 }
 
@@ -158,14 +177,14 @@ void ACHWeaponBase::ShootHitScan()
 	QueryParams.AddIgnoredActor(GetOwner());
 	QueryParams.bReturnPhysicalMaterial = true;
 	
-	DrawDebugLine(GetWorld(), MuzzlePos, EndPos, FColor::Green, false, 5.0f);
+	//DrawDebugLine(GetWorld(), MuzzlePos, EndPos, FColor::Green, false, 5.0f);
 	
 	FHitResult HitResult;
 	//TODO: Replace with multiple when finished with bullet pen
 	bool bHasHit = GetWorld()->LineTraceSingleByProfile(HitResult, MuzzlePos, EndPos, FName("Projectile"), QueryParams);
 	if (bHasHit)
 	{
-		DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 10.0f, 8, FColor::Green, false, 5.0f);
+		//DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 10.0f, 8, FColor::Green, false, 5.0f);
 
 		// If is Hittable Target
 		if (HitResult.GetActor() && HitResult.GetActor()->Implements<UHittable>())
@@ -206,7 +225,23 @@ void ACHWeaponBase::ShootHitScan()
 		
 		
 	}
+
+
+	if (BulletTracerEffect)
+	{
+		NiagaraComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
+				BulletTracerEffect,
+				MuzzlePosition,
+				NAME_None,
+				MuzzlePosition->GetSocketLocation(NAME_None),
+				FRotator::ZeroRotator,
+				EAttachLocation::KeepWorldPosition,
+				true);
+
+		NiagaraComponent->SetVariableVec3("User.Velocity", (EndPos - MuzzlePos).GetSafeNormal() * TracerSpeed);
+	}
 	
+
 }
 
 bool ACHWeaponBase::CanFire()

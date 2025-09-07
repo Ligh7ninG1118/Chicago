@@ -21,7 +21,8 @@ public class Chicago : ModuleRules
 			"StateTreeModule",
 			"GameplayStateTreeModule",
 			"UMG",
-			"GameplayMessageRuntime"
+			"GameplayMessageRuntime",
+			"Niagara"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });

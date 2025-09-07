@@ -7,6 +7,8 @@
 #include "GameFramework/Actor.h"
 #include "CHWeaponBase.generated.h"
 
+class UNiagaraComponent;
+class UNiagaraSystem;
 class UGameplayEffect;
 class IWeaponHolder;
 class USkeletalMeshComponent;
@@ -26,6 +28,12 @@ class CHICAGO_API ACHWeaponBase : public AActor
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* MagazineMesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
+	USceneComponent* MuzzlePosition;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
+	UNiagaraComponent* NiagaraComponent;	
 	
 public:	
 	// Sets default values for this actor's properties
@@ -140,6 +148,15 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon: Effects")
 	FName EjectionPortSocketName;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon: Effects")
+	UNiagaraSystem* GunMuzzleEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon: Effects")
+	UNiagaraSystem* BulletTracerEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon: Effects")
+	float TracerSpeed = 10000.0f;
 	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
