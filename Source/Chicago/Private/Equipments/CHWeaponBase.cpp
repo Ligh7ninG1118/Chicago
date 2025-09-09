@@ -45,6 +45,9 @@ void ACHWeaponBase::BeginPlay()
 {
 	Super::BeginPlay();
 
+	if (GetOwner() == nullptr)
+		return;
+
 	WeaponHolder = Cast<IWeaponHolder>(GetOwner());
 	WeaponHolder->AttachWeaponMeshes(this);
 	WeaponHolder->GetAnimInstance()->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &ACHWeaponBase::FinishReloadByNotify);
