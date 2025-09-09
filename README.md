@@ -8,4 +8,4 @@ For more information, please see [Link](https://yiyangli.dev/wlds/)
 <img width="500" height="250" alt="wlds-banner-2-rndrect" src="https://github.com/user-attachments/assets/383f5c09-9bdb-4107-8eda-db0e0bcbdfae"/>
 </p>
 
->Note: Due to different license requirements, most assets used aren't included in this rep
+>Note: Due to different license requirements, most assets used aren't included in this repo
