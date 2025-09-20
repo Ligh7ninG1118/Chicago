@@ -10,9 +10,11 @@
 #include "GameplayTagContainer.h"
 #include "InputActionValue.h"
 #include "AbilitySystem/CHAbilitySystemComponent.h"
+#include "Blueprint/UserWidget.h"
 #include "Camera/CameraModifier.h"
 #include "Character/CHCharacterMovementComponent.h"
 #include "Components/TimelineComponent.h"
+#include "Components/WidgetComponent.h"
 #include "Equipments/CHWeaponBase.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Input/CHEnhancedInputComponent.h"
@@ -25,38 +27,14 @@ ACHPlayerCharacter::ACHPlayerCharacter(const class FObjectInitializer& ObjectIni
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(34.0f, 96.0f);
-	
-	// Create the first person mesh that will be viewed only by this character's owner
 
-	/*FirstPersonMesh->SetupAttachment(GetMesh());
-	FirstPersonMesh->SetOnlyOwnerSee(true);
-	FirstPersonMesh->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::FirstPerson;
-	FirstPersonMesh->SetCollisionProfileName(FName("NoCollision"));
-
-	// Create the Camera Component	
-	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("First Person Camera"));
-	FirstPersonCameraComponent->SetupAttachment(FirstPersonMesh, FName("head"));
-	FirstPersonCameraComponent->SetRelativeLocationAndRotation(FVector(-2.8f, 5.89f, 0.0f), FRotator(0.0f, 90.0f, -90.0f));*/
-
-	//TODO: Temp solution for rotating the gun to view
-	
-	// Create the Camera Component	
-	
-	//FirstPersonCameraComponent->SetRelativeLocationAndRotation(FVector(-2.8f, 5.89f, 0.0f), FRotator(0.0f, 90.0f, -90.0f));
 	FirstPersonMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("First Person Mesh"));
 	FirstPersonMesh->SetupAttachment(FirstPersonCameraComponent);
 	FirstPersonMesh->SetOnlyOwnerSee(true);
 	FirstPersonMesh->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::FirstPerson;
 	FirstPersonMesh->SetCollisionProfileName(FName("NoCollision"));
-
 	
-	
-	//TODO: Do I need all these?
 	FirstPersonCameraComponent->bUsePawnControlRotation = true;
-	/*FirstPersonCameraComponent->bEnableFirstPersonFieldOfView = true;
-	FirstPersonCameraComponent->bEnableFirstPersonScale = true;
-	FirstPersonCameraComponent->FirstPersonFieldOfView = 70.0f;
-	FirstPersonCameraComponent->FirstPersonScale = 0.6f;*/
 
 	// configure the character comps
 	GetMesh()->SetOwnerNoSee(true);
@@ -67,6 +45,11 @@ ACHPlayerCharacter::ACHPlayerCharacter(const class FObjectInitializer& ObjectIni
 	GetCharacterMovement()->AirControl = 0.5f;
 
 	LeanTimeline = CreateDefaultSubobject<UTimelineComponent>("LeanTimeline");
+
+	LeanIndicationComponent = CreateDefaultSubobject<UWidgetComponent>(FName("Lean Indication"));
+	LeanIndicationComponent->SetupAttachment(RootComponent);
+	LeanIndicationComponent->SetWidgetSpace(EWidgetSpace::World);
+	
 }
 
 void ACHPlayerCharacter::BeginPlay()
@@ -115,6 +98,8 @@ void ACHPlayerCharacter::Tick(float DeltaSeconds)
 	}
 
 	CanContextualLeanCheck();
+
+	UpdateLeanIndicator();
 }
 
 void ACHPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -443,6 +428,52 @@ void ACHPlayerCharacter::ContextualLean(bool IsStartLeaning)
 	{
 		LeanTimeline->Reverse();
 	}
+}
+
+void ACHPlayerCharacter::UpdateLeanIndicator()
+{
+	if (CanLeanState == ECanLeanState::NoLean)
+	{
+		LeanIndicationComponent->SetVisibility(false);
+		return;
+	}
+
+	LeanIndicationComponent->SetVisibility(true);
+
+	// Use line trace to binary search the wall edge
+	const FVector CamFwd = FirstPersonCameraComponent->GetForwardVector();
+	const FVector CamPos = FirstPersonCameraComponent->GetComponentLocation();
+	FHitResult OutHit;
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+	
+	float StartDeg = 0.0f;
+	float EndDeg = CanLeanState == ECanLeanState::CanLeanLeft ? -SideWallCheckDeg : SideWallCheckDeg;
+	FVector FinalHitPoint = FVector::Zero();
+	
+	for (int i = 0; i < UIEdgeCheckDepth; ++i)
+	{
+		float MiddleDeg = (StartDeg + EndDeg) * 0.5f;
+		FVector MiddleDir = CamFwd.RotateAngleAxis(MiddleDeg, FVector::UpVector);
+		
+		bool HasHit =  GetWorld()->LineTraceSingleByChannel(OutHit, CamPos, CamPos + MiddleDir * SideWallCheckDistance, ECC_WorldDynamic, QueryParams);
+		if (HasHit)
+		{
+			StartDeg = MiddleDeg;
+			FinalHitPoint = OutHit.ImpactPoint;
+		}
+		else
+			EndDeg = MiddleDeg;
+	}
+
+	// Project Camera -> WallEdge vector onto Camera's coordination space
+	FVector CamToEdge = FinalHitPoint - CamPos;
+	FVector relativePos = FVector::Zero();
+	relativePos.X = CamToEdge.Dot(CamFwd) * UIIndicatorSafePerc;
+	relativePos.Y = CamToEdge.Dot(FirstPersonCameraComponent->GetRightVector());
+	relativePos.Z = FirstPersonCameraComponent->GetRelativeLocation().Z;
+
+	LeanIndicationComponent->SetRelativeLocation(relativePos);
 }
 
 #pragma endregion Contextual Leaning

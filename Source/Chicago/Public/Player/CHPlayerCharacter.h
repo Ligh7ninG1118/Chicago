@@ -8,6 +8,7 @@
 #include "Equipments/WeaponHolder.h"
 #include "CHPlayerCharacter.generated.h"
 
+class UWidgetComponent;
 class UTimelineComponent;
 class UInputComponent;
 class USkeletalMeshComponent;
@@ -44,6 +45,9 @@ protected:
 	/** Pawn mesh: first person view (arms; seen only by self) */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* FirstPersonMesh;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
+	UWidgetComponent* LeanIndicationComponent;	
 	
 #pragma endregion Components
 
@@ -234,6 +238,8 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Contextual Lean")
 	virtual void ContextualLean(bool IsStartLeaning);
 
+	void UpdateLeanIndicator();
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Contextual Lean")
 	float SideStepDistance = 50.0f;
 	
@@ -246,16 +252,21 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Contextual Lean")
 	float SideWallCheckDistance = 300.0f;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Contextual Lean")
+	float UIIndicatorSafePerc = 0.85f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Contextual Lean")
+	uint8 UIEdgeCheckDepth = 8;
+	
 	UPROPERTY(BlueprintReadOnly, Category = "Contextual Lean")
 	ECanLeanState CanLeanState;
-
+	
 	FVector MeshStartingRelativeOffset;
 	FVector MeshTargetOffset;
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Contextual Lean")
 	bool bIsCloseToWall = false;
 	
-	bool bIsLeaning = false;
 	bool bHasLeaned = false;
 	bool bHasFinishLeaned = false;
 	
