@@ -272,6 +272,23 @@ protected:
 	
 #pragma endregion Contextual Leaning
 
+#pragma region Mantle
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category ="Mantle")
+	bool bCanMantle = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category ="Mantle")
+	FVector MantleDestPos;	
+	
+	UFUNCTION()
+	void MantleCheck();
+
+	UFUNCTION()
+	void Mantle();
+
+#pragma endregion
+	
+
 #pragma region IWeaponHolder Interface
 	
 public:

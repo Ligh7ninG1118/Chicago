@@ -478,7 +478,56 @@ void ACHPlayerCharacter::UpdateLeanIndicator()
 
 #pragma endregion Contextual Leaning
 
+
+#pragma region Mantle
+
+void ACHPlayerCharacter::MantleCheck()
+{
+	bCanMantle = false;
+
+	const FVector CurrentPos = GetCapsuleComponent()->GetComponentLocation();
+	const FVector CurrentForward = GetCapsuleComponent()->GetForwardVector();
+	const float CapsuleRadius = GetCapsuleComponent()->GetScaledCapsuleRadius();
+	const float CapsuleHalfHeight = GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+
+	FVector MantleCheckEndPos = CurrentPos + CurrentForward * 60.0f; //var: Forward check distance
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+	FCollisionResponseParams ResponseParams;
+	FHitResult MantleCheckResult;
+	
+	if (GetWorld()->SweepSingleByChannel(
+		MantleCheckResult,
+		CurrentPos,
+		MantleCheckEndPos,
+		FQuat::Identity,
+		ECC_Visibility,
+		FCollisionShape::MakeSphere(75.0f),
+		QueryParams,
+		ResponseParams))
+	{
+		GEngine->AddOnScreenDebugMessage(125125, 0.0f, FColor::Green, TEXT("Mantle Hit"));
+		
+		FVector ImpactPoint = MantleCheckResult.ImpactPoint;
+		FVector LandingCheckStart = ImpactPoint;
+		LandingCheckStart.Z = 300.0f;
+		FVector LandingCheckEnd = ImpactPoint;
+		LandingCheckEnd.Z = 0.0f;	// probably should use player Z here
+		
+	}
+}
+
+void ACHPlayerCharacter::Mantle()
+{
+}
+
+
+#pragma endregion
+
+
 #pragma region IWeaponHolder Interface
+
+
 
 void ACHPlayerCharacter::AttachWeaponMeshes(ACHWeaponBase* Weapon)
 {
