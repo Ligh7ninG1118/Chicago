@@ -187,7 +187,7 @@ void ACHWeaponBase::ShootHitScan()
 	bool bHasHit = GetWorld()->LineTraceSingleByProfile(HitResult, MuzzlePos, EndPos, FName("Projectile"), QueryParams);
 	if (bHasHit)
 	{
-		//DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 10.0f, 8, FColor::Green, false, 5.0f);
+		DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 10.0f, 8, FColor::Green, false, 5.0f);
 
 		// If is Hittable Target
 		if (HitResult.GetActor() && HitResult.GetActor()->Implements<UHittable>())
