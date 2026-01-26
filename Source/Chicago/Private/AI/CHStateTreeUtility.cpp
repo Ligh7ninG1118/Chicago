@@ -173,3 +173,27 @@ FText FStateTreeDetectEnemiesTask::GetDescription(const FGuid& ID, FStateTreeDat
 {
 	return FText::FromString("<b>Detect Enemies</b>");
 }
+
+EStateTreeRunStatus FStateTreeAdjustCoverPositionTask::EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
+{
+	if (Transition.ChangeType == EStateTreeStateChangeType::Changed)
+	{
+		FInstanceDataType& InsData = Context.GetInstanceData(*this);
+
+		InsData.AdjustedCoverPosition = InsData.Controller->CalculateCoverAnchor(InsData.RoughPosition);
+		return EStateTreeRunStatus::Succeeded;
+	}
+
+	return EStateTreeRunStatus::Running;
+}
+
+void FStateTreeAdjustCoverPositionTask::ExitState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
+{
+	FStateTreeTaskCommonBase::ExitState(Context, Transition);
+}
+
+FText FStateTreeAdjustCoverPositionTask::GetDescription(const FGuid& ID, FStateTreeDataView InstanceDataView, const IStateTreeBindingLookup& BindingLookup,
+	EStateTreeNodeFormatting Formatting) const
+{
+	return FText::FromString("<b>Adjust Cover Position</b>");
+}
