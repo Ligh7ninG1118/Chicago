@@ -24,6 +24,8 @@ enum class ECoverPeekFlag : uint8
 	UP		= 1 << 2	// 4
 };
 
+ENUM_CLASS_FLAGS(ECoverPeekFlag)
+
 USTRUCT(BlueprintType)
 struct FCoverData
 {
@@ -36,13 +38,13 @@ struct FCoverData
 	AActor* CoverActor = nullptr;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta=(Bitmask, BitmaskEnum="ECoverPeekFlag"))
-	uint8 PeekOptions = 0;
+	ECoverPeekFlag PeekOptions = ECoverPeekFlag::NONE;
 
 	void Reset()
 	{
 		CoverActor = nullptr;
 		AnchorPosition = FVector::ZeroVector;
-		PeekOptions = 0;
+		PeekOptions = ECoverPeekFlag::NONE;
 	}
 
 	bool IsSet() const
@@ -104,6 +106,17 @@ public:
 	
 protected:
 	void ProbingCoverCorner(const FHitResult& HitResult, FVector RoughPosition);
+
+	bool HasProbingHitCover(FVector StartPosition, FVector EndPosition, const AActor* CoverActor);
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AI|Cover")
+	float SafeDistanceToCover = 15.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AI|Cover")
+	float WallProbingDistance = 200.0f;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AI|Cover")
+	uint8 WallProbingIterationDepth = 5;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI|Cover")
 	FCoverData CurrentCoverData;
