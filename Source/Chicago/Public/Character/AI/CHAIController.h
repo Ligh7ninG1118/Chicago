@@ -108,13 +108,20 @@ protected:
 	void ProbingCoverCorner(const FHitResult& HitResult, FVector RoughPosition);
 
 	bool HasProbingHitCover(FVector StartPosition, FVector EndPosition, const AActor* CoverActor);
-	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AI|Cover")
-	float SafeDistanceToCover = 15.0f;
 
+	// How much distance should AI stand away from cover
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AI|Cover")
+	float CoverAnchorAwayOffset = 15.0f;
+
+	// How much distance should AI stand aside from cover's edge
+	//TODO: Ideally this should dynamically derive from capsule's radius
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AI|Cover")
+	float CoverAnchorSideOffset = 45.0f;
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AI|Cover")
 	float WallProbingDistance = 200.0f;
-	
+
+	// Iteration depth for calculating cover's edge using binary search
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AI|Cover")
 	uint8 WallProbingIterationDepth = 5;
 	

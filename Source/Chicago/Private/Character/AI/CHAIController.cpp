@@ -103,7 +103,7 @@ void ACHAIController::ClearCoverData()
 void ACHAIController::ProbingCoverCorner(const FHitResult& HitResult, FVector RoughPosition)
 {
 	// Position if we are closely standing against the cover;
-	
+
 
 	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Cyan, TEXT("Probing"));
 
@@ -122,7 +122,7 @@ void ACHAIController::ProbingCoverCorner(const FHitResult& HitResult, FVector Ro
 			// Toward the wall
 			return Start - HitResult.ImpactNormal * 100.0f;
 		};
-		
+
 		FVector InitialProbingStart = MakeProbingStart(WallProbingDistance);
 		FVector InitialProbingEnd = MakeProbingEnd(InitialProbingStart);
 
@@ -138,7 +138,7 @@ void ACHAIController::ProbingCoverCorner(const FHitResult& HitResult, FVector Ro
 				break;
 
 			const float MidPoint = (innerDist + outerDist) * 0.5f;
-			
+
 			FVector ProbingStart = MakeProbingStart(MidPoint);
 			FVector ProbingEnd = MakeProbingEnd(ProbingStart);
 
@@ -150,45 +150,51 @@ void ACHAIController::ProbingCoverCorner(const FHitResult& HitResult, FVector Ro
 
 		return (innerDist + outerDist) * 0.5f;
 	};
-	
+
 	const FVector WallTangent = HitResult.ImpactNormal.Cross(FVector::DownVector);
 	float LeftEdgeDist = ComputeEdgeDist(WallTangent);
 	float RightEdgeDist = ComputeEdgeDist(-WallTangent);
 
-	// Left is positive, right negative
 	float FinalEdgeDist = 0.0f;
 
-	
+	GEngine->AddOnScreenDebugMessage(-1, 555.0f, FColor::Cyan,
+	                                 FString::Printf(TEXT("Left %f Right %f"), LeftEdgeDist, RightEdgeDist));
+
+
 	// If left edge and right edge is close enough, then we can peek out from either direction
-	if (FMath::Abs(LeftEdgeDist - RightEdgeDist) <= 20.0f)
+	if (LeftEdgeDist + RightEdgeDist <= CoverAnchorSideOffset)
 	{
-		//TODO: Bug?
 		FinalEdgeDist = (LeftEdgeDist - RightEdgeDist) * 0.5f;
 		CurrentCoverData.PeekOptions |= ECoverPeekFlag::LEFT;
 		CurrentCoverData.PeekOptions |= ECoverPeekFlag::RIGHT;
+
+		GEngine->AddOnScreenDebugMessage(-1, 555.0f, FColor::Cyan, TEXT("Both"));
 	}
 
 	// Choose the side with lesser distance
 	if (LeftEdgeDist < RightEdgeDist)
 	{
-		FinalEdgeDist = LeftEdgeDist;
+		FinalEdgeDist = LeftEdgeDist - CoverAnchorSideOffset;
 		CurrentCoverData.PeekOptions |= ECoverPeekFlag::LEFT;
+
+		GEngine->AddOnScreenDebugMessage(-1, 555.0f, FColor::Cyan, TEXT("Left"));
 	}
 	else
 	{
-		FinalEdgeDist = RightEdgeDist;
+		// Left is positive, right negative
+		FinalEdgeDist = -(RightEdgeDist - CoverAnchorSideOffset);
 		CurrentCoverData.PeekOptions |= ECoverPeekFlag::RIGHT;
+
+		GEngine->AddOnScreenDebugMessage(-1, 555.0f, FColor::Cyan, TEXT("Right"));
 	}
-	
+
 	const float CapsuleRadius = GetCharacter()->GetCapsuleComponent()->GetScaledCapsuleRadius();
-	FVector CloseToCoverPosition = HitResult.ImpactPoint + HitResult.ImpactNormal * (CapsuleRadius + SafeDistanceToCover);
+	FVector CloseToCoverPosition = HitResult.ImpactPoint + HitResult.ImpactNormal * (CapsuleRadius + CoverAnchorAwayOffset);
 	FVector FinalPosition = CloseToCoverPosition + WallTangent * FinalEdgeDist;
 
 	DrawDebugSphere(GetWorld(), FinalPosition, 25.0f, 8, FColor::White, true);
 	
 	CurrentCoverData.AnchorPosition = FinalPosition;
-
-	//TODO: Sidestep to safety
 }
 
 bool ACHAIController::HasProbingHitCover(FVector StartPosition, FVector EndPosition, const AActor* CoverActor)
@@ -203,10 +209,13 @@ bool ACHAIController::HasProbingHitCover(FVector StartPosition, FVector EndPosit
 
 	//TODO: Should we do a LOS check here?
 
+	DrawDebugLine(GetWorld(), StartPosition, EndPosition, FColor::Green, true);
+
+
 	// Hit nothing, or hit something but it isn't the cover itself
 	// Problem with mesh (no actor)
-	if (!bHit)
+	if (!bHit || (bHit && ProbingHitResult.GetActor() != CoverActor))
 		return false;
-	
+
 	return true;
 }
