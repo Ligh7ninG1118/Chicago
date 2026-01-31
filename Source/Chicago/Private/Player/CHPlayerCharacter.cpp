@@ -54,13 +54,6 @@ ACHPlayerCharacter::ACHPlayerCharacter(const class FObjectInitializer& ObjectIni
 
 void ACHPlayerCharacter::BeginPlay()
 {
-	FActorSpawnParameters SpawnParameters;
-	SpawnParameters.Owner = this;
-	SpawnParameters.Instigator = this;
-	
-	AActor* Weapon = GetWorld()->SpawnActor(InitialWeaponClass, nullptr, nullptr, SpawnParameters);
-	CurrentWeapon = Cast<ACHWeaponBase>(Weapon);
-
 	FOnTimelineFloat InterpFloat;
 	InterpFloat.BindUFunction(this, FName("OnLeanTimelineUpdate"));
 	LeanTimeline->AddInterpFloat(LeanCurve, InterpFloat);

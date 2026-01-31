@@ -7,6 +7,7 @@
 #include "GameplayTagContainer.h"
 #include "CHAIController.generated.h"
 
+class ACHAICharacter;
 struct FAIStimulus;
 class UStateTreeAIComponent;
 class UAIPerceptionComponent;
@@ -35,6 +36,9 @@ struct FCoverData
 	FVector AnchorPosition = FVector::ZeroVector;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	FVector PeekOutPosition = FVector::ZeroVector;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	AActor* CoverActor = nullptr;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta=(Bitmask, BitmaskEnum="ECoverPeekFlag"))
@@ -44,6 +48,7 @@ struct FCoverData
 	{
 		CoverActor = nullptr;
 		AnchorPosition = FVector::ZeroVector;
+		PeekOutPosition = FVector::ZeroVector;
 		PeekOptions = ECoverPeekFlag::NONE;
 	}
 
@@ -62,6 +67,8 @@ class CHICAGO_API ACHAIController : public AAIController
 {
 	GENERATED_BODY()
 
+	ACHAICharacter* AICharacter;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
 	UStateTreeAIComponent* StateTreeAI;
 
@@ -75,6 +82,12 @@ protected:
 	TObjectPtr<AActor> TargetEnemy;
 
 	virtual void OnPossess(APawn* InPawn) override;
+
+	virtual void OnUnPossess() override;
+	
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	
+	virtual void Tick(float DeltaSeconds) override;
 	
 public:
 	ACHAIController();
@@ -96,13 +109,18 @@ protected:
 	UFUNCTION()
 	void OnPerceptionForgotten(AActor* Actor);
 
+	
 	// Cover
 public:
 	UFUNCTION()
 	FVector CalculateCoverAnchor(FVector RoughPosition);
-
+	
 	UFUNCTION(BlueprintCallable, Category = "AI|Cover")
 	void ClearCoverData();
+	
+	void LeanOut();
+
+	void LeanBack();
 	
 protected:
 	void ProbingCoverCorner(const FHitResult& HitResult, FVector RoughPosition);
@@ -127,4 +145,19 @@ protected:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI|Cover")
 	FCoverData CurrentCoverData;
+
+	// Weapon
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Combat", meta=(ClampMin="0.05", UIMin="0.05"))
+	float DefaultBurstDuration = 0.5f;
+
+	UFUNCTION(BlueprintCallable, Category="Combat")
+	bool FireAtCurrentTarget();
+
+	UFUNCTION(BlueprintCallable, Category="Combat")
+	void StopFiring();
+	
+protected:
+	FTimerHandle TimerHandle_StopFire;
+	
 };

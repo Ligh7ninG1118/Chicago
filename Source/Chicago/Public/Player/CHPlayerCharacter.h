@@ -33,7 +33,7 @@ enum class ECanLeanState : uint8
  * 
  */
 UCLASS()
-class CHICAGO_API ACHPlayerCharacter : public ACHCharacterBase, public IWeaponHolder
+class CHICAGO_API ACHPlayerCharacter : public ACHCharacterBase
 {
 	GENERATED_BODY()
 #pragma region Components
@@ -169,9 +169,6 @@ protected:
 #pragma region Weapon
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category ="Weapon")
-	TSubclassOf<ACHWeaponBase> InitialWeaponClass;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category ="Weapon")
 	FName FirstPersonWeaponSocket = FName("ik_hand_gun");
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
@@ -193,9 +190,6 @@ protected:
 	float TimeOfLastShot = 0.0f;
 	
 	bool bShouldProcessRecoil = false;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
-	ACHWeaponBase* CurrentWeapon;
 	
 	FVector2f RecoilTarget = FVector2f::Zero();
 	

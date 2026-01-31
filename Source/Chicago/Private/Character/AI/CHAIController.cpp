@@ -3,6 +3,7 @@
 
 #include "Character/AI/CHAIController.h"
 
+#include "Character/AI/CHAICharacter.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/StateTreeAIComponent.h"
 #include "GameFramework/Character.h"
@@ -23,6 +24,27 @@ ACHAIController::ACHAIController()
 void ACHAIController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
+
+	AICharacter = Cast<ACHAICharacter>(InPawn);
+	if (!AICharacter)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AI Controller not possessing an ACHAICharacter!"));
+	}
+}
+
+void ACHAIController::OnUnPossess()
+{
+	Super::OnUnPossess();
+}
+
+void ACHAIController::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+}
+
+void ACHAIController::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
 }
 
 
@@ -58,18 +80,18 @@ FVector ACHAIController::CalculateCoverAnchor(FVector RoughPosition)
 	RoughPosition.Z = TargetPosition.Z;
 
 	FCollisionQueryParams QueryParams;
-	QueryParams.AddIgnoredActor(GetPawn());
-
-	FHitResult Hit;
-	//TODO: Consider high/low cover and objects on ground (need to trace from a height not too low nor too high)
-	bool bHit = GetWorld()->SweepSingleByChannel(
-		Hit,
-		RoughPosition,
-		TargetPosition, // Tracing from rough position all the way to target, guaranteed (?) to hit any cover
-		FQuat::Identity,
-		ECC_Visibility,
-		SphereShape,
-		QueryParams);
+                     	QueryParams.AddIgnoredActor(GetPawn());
+                     
+                     	FHitResult Hit;
+                     	//TODO: Consider high/low cover and objects on ground (need to trace from a height not too low nor too high)
+                     	bool bHit = GetWorld()->SweepSingleByChannel(
+                     		Hit,
+                     		RoughPosition,
+                     		TargetPosition, // Tracing from rough position all the way to target, guaranteed (?) to hit any cover
+                     		FQuat::Identity,
+                     		ECC_Visibility,
+                     		SphereShape,
+                     		QueryParams);
 
 	DrawDebugLine(GetWorld(), RoughPosition, TargetPosition, FColor::Orange, true, 10.0f);
 
@@ -94,6 +116,7 @@ FVector ACHAIController::CalculateCoverAnchor(FVector RoughPosition)
 
 	return CurrentCoverData.AnchorPosition;
 }
+
 
 void ACHAIController::ClearCoverData()
 {
@@ -155,7 +178,8 @@ void ACHAIController::ProbingCoverCorner(const FHitResult& HitResult, FVector Ro
 	float LeftEdgeDist = ComputeEdgeDist(WallTangent);
 	float RightEdgeDist = ComputeEdgeDist(-WallTangent);
 
-	float FinalEdgeDist = 0.0f;
+	float FinalDistToCoverAnchor = 0.0f;
+	float FinalDistToLeanOutAnchor = 0.0f;
 
 	GEngine->AddOnScreenDebugMessage(-1, 555.0f, FColor::Cyan,
 	                                 FString::Printf(TEXT("Left %f Right %f"), LeftEdgeDist, RightEdgeDist));
@@ -164,7 +188,7 @@ void ACHAIController::ProbingCoverCorner(const FHitResult& HitResult, FVector Ro
 	// If left edge and right edge is close enough, then we can peek out from either direction
 	if (LeftEdgeDist + RightEdgeDist <= CoverAnchorSideOffset)
 	{
-		FinalEdgeDist = (LeftEdgeDist - RightEdgeDist) * 0.5f;
+		FinalDistToCoverAnchor = (LeftEdgeDist - RightEdgeDist) * 0.5f;
 		CurrentCoverData.PeekOptions |= ECoverPeekFlag::LEFT;
 		CurrentCoverData.PeekOptions |= ECoverPeekFlag::RIGHT;
 
@@ -174,7 +198,8 @@ void ACHAIController::ProbingCoverCorner(const FHitResult& HitResult, FVector Ro
 	// Choose the side with lesser distance
 	if (LeftEdgeDist < RightEdgeDist)
 	{
-		FinalEdgeDist = LeftEdgeDist - CoverAnchorSideOffset;
+		FinalDistToCoverAnchor = LeftEdgeDist - CoverAnchorSideOffset;
+		FinalDistToLeanOutAnchor = LeftEdgeDist + CoverAnchorSideOffset;
 		CurrentCoverData.PeekOptions |= ECoverPeekFlag::LEFT;
 
 		GEngine->AddOnScreenDebugMessage(-1, 555.0f, FColor::Cyan, TEXT("Left"));
@@ -182,7 +207,8 @@ void ACHAIController::ProbingCoverCorner(const FHitResult& HitResult, FVector Ro
 	else
 	{
 		// Left is positive, right negative
-		FinalEdgeDist = -(RightEdgeDist - CoverAnchorSideOffset);
+		FinalDistToCoverAnchor = -(RightEdgeDist - CoverAnchorSideOffset);
+		FinalDistToLeanOutAnchor = -(RightEdgeDist + CoverAnchorSideOffset);
 		CurrentCoverData.PeekOptions |= ECoverPeekFlag::RIGHT;
 
 		GEngine->AddOnScreenDebugMessage(-1, 555.0f, FColor::Cyan, TEXT("Right"));
@@ -190,11 +216,16 @@ void ACHAIController::ProbingCoverCorner(const FHitResult& HitResult, FVector Ro
 
 	const float CapsuleRadius = GetCharacter()->GetCapsuleComponent()->GetScaledCapsuleRadius();
 	FVector CloseToCoverPosition = HitResult.ImpactPoint + HitResult.ImpactNormal * (CapsuleRadius + CoverAnchorAwayOffset);
-	FVector FinalPosition = CloseToCoverPosition + WallTangent * FinalEdgeDist;
-
-	DrawDebugSphere(GetWorld(), FinalPosition, 25.0f, 8, FColor::White, true);
+	FVector FinalPosition = CloseToCoverPosition + WallTangent * FinalDistToCoverAnchor;
+	FVector PeekOutPosition = CloseToCoverPosition + WallTangent * FinalDistToLeanOutAnchor;
 	
+	DrawDebugSphere(GetWorld(), FinalPosition, 25.0f, 8, FColor::White, true);
+	DrawDebugSphere(GetWorld(), PeekOutPosition, 25.0f, 8, FColor::Black, true);
+
 	CurrentCoverData.AnchorPosition = FinalPosition;
+	CurrentCoverData.PeekOutPosition = PeekOutPosition;
+
+	//TODO: Could do a LOS check (before all this) between the calculated peek out position and target position <- Do it in eqs?
 }
 
 bool ACHAIController::HasProbingHitCover(FVector StartPosition, FVector EndPosition, const AActor* CoverActor)
@@ -218,4 +249,69 @@ bool ACHAIController::HasProbingHitCover(FVector StartPosition, FVector EndPosit
 		return false;
 
 	return true;
+}
+
+bool ACHAIController::FireAtCurrentTarget()
+{
+	if (TargetEnemy == nullptr)
+	{
+		UE_LOG(LogTemp, Display, TEXT("AI has no target!"));
+		return false;
+	}
+
+	auto AIChar = GetCharacter();
+
+	// Check if has LOS against target enemy
+	const FVector AIPos = AIChar->GetActorLocation();
+	const FVector EnemyPos = TargetEnemy->GetActorLocation();
+
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(GetCharacter());
+	QueryParams.AddIgnoredActor(TargetEnemy);
+                     
+	FHitResult Hit;
+	bool bHit = GetWorld()->LineTraceSingleByChannel(
+		Hit,
+		AIPos,
+		EnemyPos,
+		ECC_Visibility,
+		QueryParams);
+
+	if (bHit)
+	{
+		UE_LOG(LogTemp, Display, TEXT("AI has no LOS toward the target!"));
+		//return false;
+	}
+
+	AICharacter->StartFiring();
+
+	GetWorldTimerManager().SetTimer(
+		TimerHandle_StopFire,
+		this,
+		&ACHAIController::StopFiring,
+		DefaultBurstDuration,
+		false);
+
+	return true;
+}
+
+void ACHAIController::StopFiring()
+{
+	AICharacter->StopFiring();
+}
+
+
+void ACHAIController::LeanOut()
+{
+	if (!CurrentCoverData.IsSet())
+	{
+		UE_LOG(LogTemp, Error, TEXT("AI has no cover data"));
+	}
+	
+	AICharacter->SetActorLocation(CurrentCoverData.PeekOutPosition);
+}
+
+void ACHAIController::LeanBack()
+{
+	AICharacter->SetActorLocation(CurrentCoverData.AnchorPosition);
 }

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "AbilitySystemInterface.h"
 #include "Hittable.h"
+#include "Equipments/WeaponHolder.h"
 #include "GameFramework/Character.h"
 #include "CHCharacterBase.generated.h"
 
@@ -17,7 +18,7 @@ class UCHAttributeSetBase;
 struct FOnAttributeChangeData;
 
 UCLASS()
-class CHICAGO_API ACHCharacterBase : public ACharacter, public IAbilitySystemInterface, public IHittable
+class CHICAGO_API ACHCharacterBase : public ACharacter, public IAbilitySystemInterface, public IHittable, public IWeaponHolder
 {
 	GENERATED_BODY()
 protected:
@@ -81,4 +82,35 @@ protected:
 	
 	void HandleHit_Implementation(const FHitResult& HitResult, const AActor* Instigator, float Damage, float HitForce);
 
+// Weapon
+
+public:
+	
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category ="Weapon")
+	TSubclassOf<ACHWeaponBase> InitialWeaponClass;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
+	ACHWeaponBase* CurrentWeapon;
+
+
+
+#pragma region IWeaponHolder Interface
+	
+public:
+	virtual void AttachWeaponMeshes(ACHWeaponBase* Weapon) override;
+
+	virtual void PlayFiringMontage(UAnimMontage* Montage) override;
+
+	virtual float PlayReloadMontage(UAnimMontage* Montage) override;
+
+	virtual void HandleWeaponRecoil(FVector2f Recoil) override;
+
+	virtual float GetMovementAccuracyPenalty() const override;
+
+	virtual UCameraComponent* GetFiringComponent() const override;
+
+	virtual UAnimInstance* GetAnimInstance() const override;
+	
+#pragma endregion IWeaponHolder Interface
 };

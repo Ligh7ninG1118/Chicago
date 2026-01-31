@@ -8,6 +8,7 @@
 #include "Camera/CameraComponent.h"
 #include "Character/CHCharacterMovementComponent.h"
 #include "Equipments/CHInventoryManager.h"
+#include "Equipments/CHWeaponBase.h"
 
 ACHCharacterBase::ACHCharacterBase(const class FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer.SetDefaultSubobjectClass<UCHCharacterMovementComponent>(CharacterMovementComponentName))
@@ -69,6 +70,17 @@ void ACHCharacterBase::BeginPlay()
 			AttributeSetBase->GetHealthAttribute()).AddUObject(this, &ACHCharacterBase::HealthChanged);
 		
 	}
+
+	// Spawn Weapon
+	if (InitialWeaponClass != nullptr)
+	{
+		FActorSpawnParameters SpawnParameters;
+		SpawnParameters.Owner = this;
+		SpawnParameters.Instigator = this;
+		
+		AActor* Weapon = GetWorld()->SpawnActor(InitialWeaponClass, nullptr, nullptr, SpawnParameters);
+		CurrentWeapon = Cast<ACHWeaponBase>(Weapon);
+	}
 }
 
 void ACHCharacterBase::AddCharacterAbilities()
@@ -124,6 +136,41 @@ bool ACHCharacterBase::ShouldShowHitEffect_Implementation() const
 void ACHCharacterBase::HandleHit_Implementation(const FHitResult& HitResult, const AActor* Shooter, float Damage, float HitForce)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Hit"));
+}
+
+void ACHCharacterBase::AttachWeaponMeshes(ACHWeaponBase* Weapon)
+{
+	// Empty
+}
+
+void ACHCharacterBase::PlayFiringMontage(UAnimMontage* Montage)
+{
+	// Empty
+}
+
+float ACHCharacterBase::PlayReloadMontage(UAnimMontage* Montage)
+{
+	return 0.0f;
+}
+
+void ACHCharacterBase::HandleWeaponRecoil(FVector2f Recoil)
+{
+	// Empty
+}
+
+float ACHCharacterBase::GetMovementAccuracyPenalty() const
+{
+	return 0.0f;
+}
+
+UCameraComponent* ACHCharacterBase::GetFiringComponent() const
+{
+	return nullptr;
+}
+
+UAnimInstance* ACHCharacterBase::GetAnimInstance() const
+{
+	return nullptr;
 }
 
 
