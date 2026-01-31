@@ -13,5 +13,10 @@ UCLASS()
 class CHICAGO_API ACHAICharacter : public ACHCharacterBase
 {
 	GENERATED_BODY()
-	
+
+// Weapon
+public:
+	void StartFiring();
+
+	void StopFiring();
 };

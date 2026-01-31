@@ -186,3 +186,67 @@ struct FStateTreeAdjustCoverPositionTask : public FStateTreeTaskCommonBase
 	virtual FText GetDescription(const FGuid& ID, FStateTreeDataView InstanceDataView, const IStateTreeBindingLookup& BindingLookup, EStateTreeNodeFormatting Formatting = EStateTreeNodeFormatting::Text) const override;
 #endif
 };
+
+USTRUCT()
+struct FStateTreeChangeLeanStateInstanceData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, Category = Context)
+	TObjectPtr<ACHAIController> Controller;
+
+	UPROPERTY(EditAnywhere, Category = Context)
+	TObjectPtr<ACHAICharacter> Character;
+
+	UPROPERTY(EditAnywhere, Category="Parameter")
+	bool bIsLeanOut = true;
+};
+
+USTRUCT(meta=(DisplayName = "Change Lean State", Category="Chicago"))
+struct FStateTreeChangeLeanState : public FStateTreeTaskCommonBase
+{
+	GENERATED_BODY()
+
+	using FInstanceDataType = FStateTreeChangeLeanStateInstanceData;
+	virtual const UStruct* GetInstanceDataType() const override {return FInstanceDataType::StaticStruct();}
+
+	virtual EStateTreeRunStatus EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const override;
+
+	virtual void ExitState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const override;
+
+#if WITH_EDITOR
+	virtual FText GetDescription(const FGuid& ID, FStateTreeDataView InstanceDataView, const IStateTreeBindingLookup& BindingLookup, EStateTreeNodeFormatting Formatting = EStateTreeNodeFormatting::Text) const override;
+#endif
+};
+
+USTRUCT()
+struct FStateTreeShootInstanceData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, Category = Context)
+	TObjectPtr<ACHAIController> Controller;
+
+	UPROPERTY(EditAnywhere, Category = Context)
+	TObjectPtr<ACHAICharacter> Character;
+};
+
+/**
+ *  StateTree task to have an NPC shoot at an actor
+ */
+USTRUCT(meta=(DisplayName="Shoot", Category="Chicago"))
+struct FStateTreeShootTask : public FStateTreeTaskCommonBase
+{
+	GENERATED_BODY()
+
+	using FInstanceDataType = FStateTreeShootInstanceData;
+	virtual const UStruct* GetInstanceDataType() const override { return FInstanceDataType::StaticStruct(); }
+
+	virtual EStateTreeRunStatus EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const override;
+
+	virtual void ExitState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const override;
+
+#if WITH_EDITOR
+	virtual FText GetDescription(const FGuid& ID, FStateTreeDataView InstanceDataView, const IStateTreeBindingLookup& BindingLookup, EStateTreeNodeFormatting Formatting = EStateTreeNodeFormatting::Text) const override;
+#endif // WITH_EDITOR
+};

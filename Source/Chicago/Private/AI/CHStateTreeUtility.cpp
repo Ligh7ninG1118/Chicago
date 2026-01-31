@@ -197,3 +197,62 @@ FText FStateTreeAdjustCoverPositionTask::GetDescription(const FGuid& ID, FStateT
 {
 	return FText::FromString("<b>Adjust Cover Position</b>");
 }
+
+EStateTreeRunStatus FStateTreeChangeLeanState::EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
+{
+	FInstanceDataType& InstanceData = Context.GetInstanceData(*this);
+
+	if (Transition.ChangeType == EStateTreeStateChangeType::Changed)
+	{
+		FInstanceDataType& InsData = Context.GetInstanceData(*this);
+		
+		if (InsData.bIsLeanOut)
+		{
+			InsData.Controller->LeanOut();
+		}
+		else
+		{
+			InsData.Controller->LeanBack();
+		}
+		return EStateTreeRunStatus::Succeeded;
+	}
+	return EStateTreeRunStatus::Running;
+}
+
+void FStateTreeChangeLeanState::ExitState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
+{
+	FStateTreeTaskCommonBase::ExitState(Context, Transition);
+}
+
+FText FStateTreeChangeLeanState::GetDescription(const FGuid& ID, FStateTreeDataView InstanceDataView, const IStateTreeBindingLookup& BindingLookup,
+	EStateTreeNodeFormatting Formatting) const
+{
+	return FText::FromString("<b>Change Lean State</b>");
+}
+
+EStateTreeRunStatus FStateTreeShootTask::EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
+{
+	FInstanceDataType& InstanceData = Context.GetInstanceData(*this);
+
+	if (Transition.ChangeType == EStateTreeStateChangeType::Changed)
+	{
+		FInstanceDataType& InsData = Context.GetInstanceData(*this);
+
+		InsData.Controller->FireAtCurrentTarget();
+
+		// Needs a On Fire Stop callback
+	}
+
+	return EStateTreeRunStatus::Running;
+}
+
+void FStateTreeShootTask::ExitState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
+{
+	FStateTreeTaskCommonBase::ExitState(Context, Transition);
+}
+
+FText FStateTreeShootTask::GetDescription(const FGuid& ID, FStateTreeDataView InstanceDataView, const IStateTreeBindingLookup& BindingLookup,
+	EStateTreeNodeFormatting Formatting) const
+{
+	return FText::FromString("<b>Shoot</b>");
+}
