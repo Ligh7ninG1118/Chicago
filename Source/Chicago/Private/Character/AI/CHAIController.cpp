@@ -80,30 +80,36 @@ FVector ACHAIController::CalculateCoverAnchor(FVector RoughPosition)
 	RoughPosition.Z = TargetPosition.Z;
 
 	FCollisionQueryParams QueryParams;
-                     	QueryParams.AddIgnoredActor(GetPawn());
+	QueryParams.AddIgnoredActor(GetPawn());
                      
-                     	FHitResult Hit;
-                     	//TODO: Consider high/low cover and objects on ground (need to trace from a height not too low nor too high)
-                     	bool bHit = GetWorld()->SweepSingleByChannel(
-                     		Hit,
-                     		RoughPosition,
-                     		TargetPosition, // Tracing from rough position all the way to target, guaranteed (?) to hit any cover
-                     		FQuat::Identity,
-                     		ECC_Visibility,
-                     		SphereShape,
-                     		QueryParams);
+	FHitResult Hit;
+	//TODO: Consider high/low cover and objects on ground (need to trace from a height not too low nor too high)
+	bool bHit = GetWorld()->SweepSingleByChannel(
+		Hit,
+		RoughPosition,
+		TargetPosition, // Tracing from rough position all the way to target, guaranteed (?) to hit any cover
+		FQuat::Identity,
+		ECC_Visibility,
+		SphereShape,
+		QueryParams);
 
-	DrawDebugLine(GetWorld(), RoughPosition, TargetPosition, FColor::Orange, true, 10.0f);
+	if (bShouldShowDebugInfo)
+	{
+		DrawDebugLine(GetWorld(), RoughPosition, TargetPosition, FColor::Orange, true, 10.0f);
+	}
 
 	if (bHit)
 	{
-		DrawDebugSphere(GetWorld(),
-		                Hit.ImpactPoint,
-		                50.0f,
-		                8,
-		                FColor::Red,
-		                true,
-		                10.0f);
+		if (bShouldShowDebugInfo)
+		{
+			DrawDebugSphere(GetWorld(),
+							Hit.ImpactPoint,
+							50.0f,
+							8,
+							FColor::Red,
+							true,
+							10.0f);
+		}
 
 		CurrentCoverData.CoverActor = Hit.GetActor();
 		ProbingCoverCorner(Hit, RoughPosition);
@@ -127,8 +133,10 @@ void ACHAIController::ProbingCoverCorner(const FHitResult& HitResult, FVector Ro
 {
 	// Position if we are closely standing against the cover;
 
-
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Cyan, TEXT("Probing"));
+	if (bShouldShowDebugInfo)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Cyan, TEXT("Probing"));
+	}
 
 	//TODO: Wall probing distance depends on cover collider (won't have to go further than half the size)
 
@@ -181,9 +189,11 @@ void ACHAIController::ProbingCoverCorner(const FHitResult& HitResult, FVector Ro
 	float FinalDistToCoverAnchor = 0.0f;
 	float FinalDistToLeanOutAnchor = 0.0f;
 
-	GEngine->AddOnScreenDebugMessage(-1, 555.0f, FColor::Cyan,
-	                                 FString::Printf(TEXT("Left %f Right %f"), LeftEdgeDist, RightEdgeDist));
-
+	if (bShouldShowDebugInfo)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 555.0f, FColor::Cyan,
+		                                 FString::Printf(TEXT("Left %f Right %f"), LeftEdgeDist, RightEdgeDist));
+	}
 
 	// If left edge and right edge is close enough, then we can peek out from either direction
 	if (LeftEdgeDist + RightEdgeDist <= CoverAnchorSideOffset)
@@ -192,7 +202,10 @@ void ACHAIController::ProbingCoverCorner(const FHitResult& HitResult, FVector Ro
 		CurrentCoverData.PeekOptions |= ECoverPeekFlag::LEFT;
 		CurrentCoverData.PeekOptions |= ECoverPeekFlag::RIGHT;
 
-		GEngine->AddOnScreenDebugMessage(-1, 555.0f, FColor::Cyan, TEXT("Both"));
+		if (bShouldShowDebugInfo)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 555.0f, FColor::Cyan, TEXT("Both"));
+		}
 	}
 
 	// Choose the side with lesser distance
@@ -202,7 +215,10 @@ void ACHAIController::ProbingCoverCorner(const FHitResult& HitResult, FVector Ro
 		FinalDistToLeanOutAnchor = LeftEdgeDist + CoverAnchorSideOffset;
 		CurrentCoverData.PeekOptions |= ECoverPeekFlag::LEFT;
 
-		GEngine->AddOnScreenDebugMessage(-1, 555.0f, FColor::Cyan, TEXT("Left"));
+		if (bShouldShowDebugInfo)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 555.0f, FColor::Cyan, TEXT("Left"));
+		}
 	}
 	else
 	{
@@ -211,7 +227,10 @@ void ACHAIController::ProbingCoverCorner(const FHitResult& HitResult, FVector Ro
 		FinalDistToLeanOutAnchor = -(RightEdgeDist + CoverAnchorSideOffset);
 		CurrentCoverData.PeekOptions |= ECoverPeekFlag::RIGHT;
 
-		GEngine->AddOnScreenDebugMessage(-1, 555.0f, FColor::Cyan, TEXT("Right"));
+		if (bShouldShowDebugInfo)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 555.0f, FColor::Cyan, TEXT("Right"));
+		}
 	}
 
 	const float CapsuleRadius = GetCharacter()->GetCapsuleComponent()->GetScaledCapsuleRadius();
@@ -219,8 +238,11 @@ void ACHAIController::ProbingCoverCorner(const FHitResult& HitResult, FVector Ro
 	FVector FinalPosition = CloseToCoverPosition + WallTangent * FinalDistToCoverAnchor;
 	FVector PeekOutPosition = CloseToCoverPosition + WallTangent * FinalDistToLeanOutAnchor;
 	
-	DrawDebugSphere(GetWorld(), FinalPosition, 25.0f, 8, FColor::White, true);
-	DrawDebugSphere(GetWorld(), PeekOutPosition, 25.0f, 8, FColor::Black, true);
+	if (bShouldShowDebugInfo)
+	{
+		DrawDebugSphere(GetWorld(), FinalPosition, 25.0f, 8, FColor::White, true);
+		DrawDebugSphere(GetWorld(), PeekOutPosition, 25.0f, 8, FColor::Black, true);
+	}
 
 	CurrentCoverData.AnchorPosition = FinalPosition;
 	CurrentCoverData.PeekOutPosition = PeekOutPosition;
@@ -240,8 +262,10 @@ bool ACHAIController::HasProbingHitCover(FVector StartPosition, FVector EndPosit
 
 	//TODO: Should we do a LOS check here?
 
-	DrawDebugLine(GetWorld(), StartPosition, EndPosition, FColor::Green, true);
-
+	if (bShouldShowDebugInfo)
+	{
+		DrawDebugLine(GetWorld(), StartPosition, EndPosition, FColor::Green, true);
+	}
 
 	// Hit nothing, or hit something but it isn't the cover itself
 	// Problem with mesh (no actor)

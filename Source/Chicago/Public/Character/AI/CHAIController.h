@@ -146,6 +146,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI|Cover")
 	FCoverData CurrentCoverData;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI|Cover")
+	bool bShouldShowDebugInfo = false;
+
 	// Weapon
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Combat", meta=(ClampMin="0.05", UIMin="0.05"))
