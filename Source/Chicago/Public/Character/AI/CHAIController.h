@@ -98,6 +98,12 @@ public:
 
 	AActor* GetCurrentTarget() const { return TargetEnemy; };
 	
+	UFUNCTION(BlueprintCallable, Category = "AI|Flank")
+	void SetFlankPosition(FVector InPos);
+	
+	UFUNCTION(BlueprintCallable, Category = "AI|Flank")
+	FVector GetFlankPosition() const {return FlankPosition;}
+	
 	FAIPerceptionUpdatedDelegate OnAIPerceptionUpdated;
 	
 	FAIPerceptionForgottenDelegate OnAIPerceptionForgotten;
@@ -109,6 +115,7 @@ protected:
 	UFUNCTION()
 	void OnPerceptionForgotten(AActor* Actor);
 
+	FVector FlankPosition;
 	
 	// Cover
 public:

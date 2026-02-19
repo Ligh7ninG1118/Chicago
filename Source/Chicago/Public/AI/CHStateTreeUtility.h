@@ -152,6 +152,40 @@ struct FStateTreeDetectEnemiesTask : public FStateTreeTaskCommonBase
 };
 
 USTRUCT()
+struct FStateTreeRequestCoverPositionInstanceData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, Category = Context)
+	TObjectPtr<ACHAIController> Controller;
+
+	UPROPERTY(EditAnywhere, Category = Context)
+	TObjectPtr<ACHAICharacter> Character;
+
+	UPROPERTY(EditAnywhere, Category = Output)
+	FVector RequestedCoverPosition = FVector::ZeroVector;
+
+	UPROPERTY(EditAnywhere, Category = Output)
+	bool bHasCoverPosition = false;
+};
+
+USTRUCT(meta=(DisplayName="Request Cover Position", Category="Chicago"))
+struct FStateTreeRequestCoverPositionTask : public FStateTreeTaskCommonBase
+{
+	GENERATED_BODY()
+
+	using FInstanceDataType = FStateTreeRequestCoverPositionInstanceData;
+	virtual const UStruct* GetInstanceDataType() const override { return FInstanceDataType::StaticStruct(); }
+
+	virtual EStateTreeRunStatus EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const override;
+
+#if WITH_EDITOR
+	virtual FText GetDescription(const FGuid& ID, FStateTreeDataView InstanceDataView, const IStateTreeBindingLookup& BindingLookup,
+		EStateTreeNodeFormatting Formatting = EStateTreeNodeFormatting::Text) const override;
+#endif
+};
+
+USTRUCT()
 struct FStateTreeAdjustCoverPositionInstanceData
 {
 	GENERATED_BODY()
@@ -250,3 +284,6 @@ struct FStateTreeShootTask : public FStateTreeTaskCommonBase
 	virtual FText GetDescription(const FGuid& ID, FStateTreeDataView InstanceDataView, const IStateTreeBindingLookup& BindingLookup, EStateTreeNodeFormatting Formatting = EStateTreeNodeFormatting::Text) const override;
 #endif // WITH_EDITOR
 };
+
+
+

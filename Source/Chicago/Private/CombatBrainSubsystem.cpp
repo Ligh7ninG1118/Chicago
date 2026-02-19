@@ -146,13 +146,17 @@ FVector UCombatBrainSubsystem::RequestCoverPosition(AActor* Combatant)
 	const FVector& CurrentPlayerPos = GetPlayerPosition();
 	const FVector& CurrentAIPosition = Combatant->GetActorLocation();
 
-	// If player's current position is some distance away from the cached position,
+	// If player's current position is (set and) some distance away from the cached position,
 	// we need to reevaluate all slices' weight for a more accurate representation
-	// Otherwise, we accept the small inaccuracy and reuse the previous result
-	if (FVector::DistSquared(CurrentPlayerPos, CachedPlayerPosition) > MaxDistToReevaluateWeight * MaxDistToReevaluateWeight)
+	// Otherwise, we accept that small inaccuracy and reuse the previous result
+	if (CachedPlayerPosition.IsSet() && 
+		FVector::DistSquared(CurrentPlayerPos, CachedPlayerPosition.GetValue()) > MaxDistToReevaluateWeight * MaxDistToReevaluateWeight)
 	{
 		UpdateAllSlicesWeight();
 	}
+	
+	if (!CachedPlayerPosition.IsSet())
+		CachedPlayerPosition = CurrentPlayerPos;
 
 	int32 CurrentSliceIndex = GetSliceIndexFromWorldPosition(CurrentAIPosition);
 
@@ -175,9 +179,17 @@ FVector UCombatBrainSubsystem::RequestCoverPosition(AActor* Combatant)
 	const int32 PickCount = FMath::Min(3, SortedIndices.Num());
 	const int32 ChosenCandidate = FMath::RandRange(0, PickCount-1);
 	const int32 NewSliceIndex = SortedIndices[ChosenCandidate];
-
+	
 	ChangeCombatantOccupiedSlice(Combatant, NewSliceIndex);
-
+	
+	if (bShouldDrawDebugInfo)
+	{
+		const FString Output = FString::Printf(TEXT("%s now occupies Slice %d"), *Combatant->GetName(), NewSliceIndex); 
+		GEngine->AddOnScreenDebugMessage(99115, 5.0f, FColor::Green, *Output);
+	}
+	
+	//TODO: AI could assign to a slice/position but the found a cover in another slice, needs a callback of some sort that readjust the slice 
+	
 	return CalculateNextCoverPosition(NewSliceIndex, CurrentAIPosition);
 }
 
@@ -217,17 +229,18 @@ void UCombatBrainSubsystem::ModifySliceWeight(int32 SliceIndex, bool bIsAdding)
 			// Actual weight for any slice shouldn't be below zero
 			CurrentSliceWeights[Index] = FMath::Max(0, CurrentSliceWeights[Index] + Delta);
 		};
-
+		
 		// The center slice
 		if (i == 0)
 		{
 			UpdateWeight(SliceIndex);
-			continue;
 		}
-
 		// Neighbors
-		UpdateWeight(WrapSliceIndex(SliceIndex + i));
-		UpdateWeight(WrapSliceIndex(SliceIndex - i));
+		else 
+		{
+			UpdateWeight(WrapSliceIndex(SliceIndex + i));
+			UpdateWeight(WrapSliceIndex(SliceIndex - i));
+		}
 	}
 }
 
@@ -242,6 +255,7 @@ void UCombatBrainSubsystem::UpdateAllSlicesWeight()
 
 		const FVector CombatantPos = Combatant->GetActorLocation();
 		ModifySliceWeight(GetSliceIndexFromWorldPosition(CombatantPos), true);
+		//TODO: Logic flow issue? Have to make sure combatants are in CombatantOccupiedSlice before calling this, or check it in here
 	}
 
 	// Current result is in relation to current player position, update it
@@ -360,7 +374,7 @@ void UCombatBrainSubsystem::DebugPrintCombatantStates()
 
 	auto AddLine = [&](const FString& Msg, const FColor& Color = FColor::Green)
 	{
-		GEngine->AddOnScreenDebugMessage(Key++, Duration, Color, Msg);
+		GEngine->AddOnScreenDebugMessage(Key++, Duration, Color, Msg, false);
 	};
 
 	AddLine(FString::Printf(TEXT("CombatBrain | Registered Combatants: %d"), RegisteredCombatants.Num()), FColor::Yellow);

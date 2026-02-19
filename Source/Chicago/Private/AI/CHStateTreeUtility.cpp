@@ -2,6 +2,8 @@
 
 
 #include "AI/CHStateTreeUtility.h"
+
+#include "CombatBrainSubsystem.h"
 #include "Character/AI/CHAICharacter.h"
 #include "StateTreeExecutionContext.h"
 #include "Character/AI/CHAIController.h"
@@ -173,6 +175,44 @@ FText FStateTreeDetectEnemiesTask::GetDescription(const FGuid& ID, FStateTreeDat
 {
 	return FText::FromString("<b>Detect Enemies</b>");
 }
+
+EStateTreeRunStatus FStateTreeRequestCoverPositionTask::EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
+{
+	if (Transition.ChangeType != EStateTreeStateChangeType::Changed)
+		return EStateTreeRunStatus::Running;
+
+	FInstanceDataType& InsData = Context.GetInstanceData(*this);
+
+	// Reset outputs each enter
+	InsData.bHasCoverPosition = false;
+	InsData.RequestedCoverPosition = FVector::ZeroVector;
+
+	ACHAICharacter* Character = InsData.Character.Get();
+	ACHAIController* Controller = InsData.Controller.Get();
+
+	UWorld* World = Character->GetWorld();
+	if (!World)
+		return EStateTreeRunStatus::Failed;
+
+	UCombatBrainSubsystem* CombatBrain = World->GetSubsystem<UCombatBrainSubsystem>();
+	if (!CombatBrain)
+		return EStateTreeRunStatus::Failed;
+
+	InsData.RequestedCoverPosition = CombatBrain->RequestCoverPosition(Character);
+	InsData.bHasCoverPosition = true;
+
+	Controller->SetFlankPosition(InsData.RequestedCoverPosition);
+	
+	return EStateTreeRunStatus::Succeeded;
+}
+
+#if WITH_EDITOR
+FText FStateTreeRequestCoverPositionTask::GetDescription(const FGuid& ID, FStateTreeDataView InstanceDataView,
+	const IStateTreeBindingLookup& BindingLookup, EStateTreeNodeFormatting Formatting) const
+{
+	return FText::FromString(TEXT("<b>Request Cover Position</b>"));
+}
+#endif
 
 EStateTreeRunStatus FStateTreeAdjustCoverPositionTask::EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
 {

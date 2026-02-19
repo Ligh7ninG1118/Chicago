@@ -141,7 +141,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat Brain|Utility")
 	float MaxDistToReevaluateWeight = 500.0f;
 	
-	FVector CachedPlayerPosition = FVector::ZeroVector;
+	// Cache player's position during cover slices calculation
+	// If needs to be UPROPERTY, switch to use explicit boolean var to check IsSet
+	TOptional<FVector> CachedPlayerPosition;
 
 private:
 	int32 WrapSliceIndex(int32 Index) const;

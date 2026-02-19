@@ -58,6 +58,11 @@ void ACHAIController::ClearCurrentTarget()
 	TargetEnemy = nullptr;
 }
 
+void ACHAIController::SetFlankPosition(FVector InPos)
+{
+	FlankPosition = InPos;
+}
+
 void ACHAIController::OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
 {
 	OnAIPerceptionUpdated.ExecuteIfBound(Actor, Stimulus);
