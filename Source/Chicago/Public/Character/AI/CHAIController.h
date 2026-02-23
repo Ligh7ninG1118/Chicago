@@ -16,7 +16,7 @@ class UAIPerceptionComponent;
 DECLARE_DELEGATE_TwoParams(FAIPerceptionUpdatedDelegate, AActor*, const FAIStimulus&);
 DECLARE_DELEGATE_OneParam(FAIPerceptionForgottenDelegate, AActor*);
 
-UENUM(BlueprintType, meta = (Bitflags, UseEnumValuesAsMasks))
+UENUM(BlueprintType, meta = (Bitflags, UseEnumValuesAsMaskValuesInEditor = "true"))
 enum class ECoverPeekFlag : uint8
 {
 	NONE	= 0,
@@ -41,7 +41,7 @@ struct FCoverData
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	AActor* CoverActor = nullptr;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta=(Bitmask, BitmaskEnum="ECoverPeekFlag"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta=(Bitmask, BitmaskEnum="/Script/Chicago.ECoverPeekFlag"))
 	ECoverPeekFlag PeekOptions = ECoverPeekFlag::NONE;
 
 	void Reset()

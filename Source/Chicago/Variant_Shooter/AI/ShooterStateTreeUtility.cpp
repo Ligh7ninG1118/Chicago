@@ -224,8 +224,9 @@ EStateTreeRunStatus FStateTreeSenseEnemiesTask::EnterState(FStateTreeExecutionCo
 			[WeakContext = Context.MakeWeakExecutionContext()](AActor* SensedActor, const FAIStimulus& Stimulus)
 			{
 				// get the instance data inside the lambda
-				FInstanceDataType* LambdaInstanceData = WeakContext.MakeStrongExecutionContext().GetInstanceDataPtr<FInstanceDataType>();
-
+				const FStateTreeStrongExecutionContext StrongContext = WeakContext.MakeStrongExecutionContext();
+				FInstanceDataType* LambdaInstanceData = StrongContext.GetInstanceDataPtr<FInstanceDataType>();
+				
 				if (!LambdaInstanceData)
 				{
 					return;
@@ -299,8 +300,9 @@ EStateTreeRunStatus FStateTreeSenseEnemiesTask::EnterState(FStateTreeExecutionCo
 			[WeakContext = Context.MakeWeakExecutionContext()](AActor* SensedActor)
 			{
 				// get the instance data inside the lambda
-				FInstanceDataType* LambdaInstanceData = WeakContext.MakeStrongExecutionContext().GetInstanceDataPtr<FInstanceDataType>();
-
+				const FStateTreeStrongExecutionContext StrongContext = WeakContext.MakeStrongExecutionContext();
+				FInstanceDataType* LambdaInstanceData = StrongContext.GetInstanceDataPtr<FInstanceDataType>();
+				
 				if (!LambdaInstanceData)
 				{
 					return;

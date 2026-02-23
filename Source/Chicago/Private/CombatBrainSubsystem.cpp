@@ -188,7 +188,9 @@ FVector UCombatBrainSubsystem::RequestCoverPosition(AActor* Combatant)
 		GEngine->AddOnScreenDebugMessage(99115, 5.0f, FColor::Green, *Output);
 	}
 	
-	//TODO: AI could assign to a slice/position but the found a cover in another slice, needs a callback of some sort that readjust the slice 
+	//TODO: AI could assign to a slice/position but then found a cover in another slice, needs a callback of some sort that readjust the slice 
+	
+	//TODO: Also how do we deal with "Trying to flank, but ZERO cover in that half of the battlefield, so AI doesnt even more in the end 
 	
 	return CalculateNextCoverPosition(NewSliceIndex, CurrentAIPosition);
 }

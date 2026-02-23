@@ -116,8 +116,9 @@ EStateTreeRunStatus FStateTreeDetectEnemiesTask::EnterState(FStateTreeExecutionC
 		InsData.Controller->OnAIPerceptionUpdated.BindLambda(
 			[WeakContext = Context.MakeWeakExecutionContext()](AActor* DetectedActor, const FAIStimulus& Stimulus)
 			{
-				FInstanceDataType* LambdaInsData = WeakContext.MakeStrongExecutionContext().GetInstanceDataPtr<FInstanceDataType>();
-
+				const FStateTreeStrongExecutionContext StrongContext = WeakContext.MakeStrongExecutionContext();
+				FInstanceDataType* LambdaInsData = StrongContext.GetInstanceDataPtr<FInstanceDataType>();
+				
 				if (!LambdaInsData)
 					return;
 
